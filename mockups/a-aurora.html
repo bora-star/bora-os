@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasarım A · Aurora — Bora OS</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0a0e1a;
+  color: #eef1f8;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+/* arka plan ışımaları */
+body::before, body::after {
+  content: "";
+  position: fixed;
+  width: 480px; height: 480px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.35;
+  z-index: 0;
+  pointer-events: none;
+}
+body::before { background: #6d4aff; top: -180px; left: -120px; }
+body::after { background: #ff4a8d; bottom: -200px; right: -140px; opacity: 0.22; }
+
+.tag {
+  position: fixed; top: 10px; right: 10px; z-index: 99;
+  background: rgba(109,74,255,0.25); border: 1px solid rgba(109,74,255,0.5);
+  color: #c9b8ff; font-size: 11px; padding: 4px 10px; border-radius: 99px;
+}
+.wrap { max-width: 430px; margin: 0 auto; padding: 22px 18px 100px; position: relative; z-index: 1; }
+
+.hello { font-size: 14px; color: #8e96ad; }
+h1 { font-size: 28px; margin: 4px 0 20px; }
+h1 em { font-style: normal; background: linear-gradient(90deg, #8b6bff, #ff6bb3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* günün halkası */
+.hero {
+  display: flex; align-items: center; gap: 18px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  backdrop-filter: blur(14px);
+  border-radius: 22px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.ring { position: relative; width: 92px; height: 92px; }
+.ring svg { transform: rotate(-90deg); }
+.ring .pct {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: bold;
+}
+.hero .stats { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.stat { display: flex; justify-content: space-between; font-size: 13.5px; color: #aab2c7; }
+.stat b { color: #eef1f8; }
+
+.card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.09);
+  backdrop-filter: blur(14px);
+  border-radius: 22px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.card h2 { font-size: 13px; letter-spacing: 1.5px; color: #8e96ad; margin-bottom: 14px; text-transform: uppercase; }
+
+.task { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.task:last-child { border-bottom: none; }
+.ck {
+  width: 26px; height: 26px; min-width: 26px; border-radius: 9px;
+  border: 2px solid #3d465e; display: flex; align-items: center; justify-content: center;
+  color: transparent; font-size: 14px;
+}
+.task.done .ck { background: linear-gradient(135deg, #8b6bff, #ff6bb3); border: none; color: #fff; }
+.task.done .t { text-decoration: line-through; color: #707a93; }
+.task .t { font-size: 15.5px; line-height: 1.35; }
+.task .s { font-size: 12px; color: #707a93; margin-top: 2px; }
+.pill {
+  margin-left: auto; font-size: 10.5px; padding: 4px 10px; border-radius: 99px; white-space: nowrap;
+  background: rgba(139,107,255,0.18); color: #b9a4ff; border: 1px solid rgba(139,107,255,0.35);
+}
+.pill.rose { background: rgba(255,107,179,0.14); color: #ff9cc8; border-color: rgba(255,107,179,0.3); }
+
+/* alışkanlık çipleri */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+  padding: 11px 16px; border-radius: 16px; font-size: 14.5px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #cdd3e3;
+}
+.chip.on {
+  background: linear-gradient(135deg, rgba(139,107,255,0.95), rgba(255,107,179,0.9));
+  border: none; color: #fff; font-weight: bold;
+  box-shadow: 0 6px 22px rgba(139,107,255,0.35);
+}
+.streak { font-size: 12px; color: #ffb86b; margin-top: 12px; }
+
+/* rutin */
+.rut { display: flex; align-items: center; gap: 12px; padding: 9px 0; font-size: 15px; }
+.dotk { width: 22px; height: 22px; min-width: 22px; border-radius: 50%; border: 2px solid #3d465e; }
+.rut.on .dotk { background: #41d99d; border-color: #41d99d; box-shadow: 0 0 12px rgba(65,217,157,0.5); }
+.rut.on span { color: #707a93; text-decoration: line-through; }
+
+.nav {
+  position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 4px; z-index: 50;
+  background: rgba(20,25,42,0.85); backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.1); border-radius: 22px; padding: 8px;
+}
+.nav button {
+  border: none; background: transparent; color: #8e96ad; font-size: 18px;
+  width: 52px; height: 44px; border-radius: 15px; cursor: pointer;
+}
+.nav button.on { background: linear-gradient(135deg, #8b6bff, #ff6bb3); color: #fff; }
+</style>
+</head>
+<body>
+<div class="tag">Tasarım A · Aurora</div>
+<div class="wrap">
+  <div class="hello">11 Haziran Perşembe</div>
+  <h1>Günaydın, <em>Bora</em> ☀️</h1>
+
+  <div class="hero">
+    <div class="ring">
+      <svg width="92" height="92">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8b6bff"/><stop offset="1" stop-color="#ff6bb3"/>
+          </linearGradient>
+        </defs>
+        <circle cx="46" cy="46" r="38" stroke="rgba(255,255,255,0.08)" stroke-width="9" fill="none"/>
+        <circle cx="46" cy="46" r="38" stroke="url(#g)" stroke-width="9" fill="none"
+                stroke-linecap="round" stroke-dasharray="239" stroke-dashoffset="86"/>
+      </svg>
+      <div class="pct">%64</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>✅ Görev</span><b>2/4</b></div>
+      <div class="stat"><span>🔥 Alışkanlık</span><b>2/3</b></div>
+      <div class="stat"><span>📈 Rutin</span><b>3/4</b></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Bugünün görevleri</h2>
+    <div class="task done"><div class="ck">✓</div><div><div class="t">hissetezcisi v3.0'ı web'e yükle</div><div class="s">AI · hissetezcisi</div></div><span class="pill">AI</span></div>
+    <div class="task"><div class="ck"></div><div><div class="t">V2 Faz 5 hafta sonu sprinti</div><div class="s">Proje · V2 data+rules</div></div><span class="pill rose">13 Haz</span></div>
+    <div class="task"><div class="ck"></div><div><div class="t">qswing Parça 2: EMA takip + bildirim</div><div class="s">Proje · qswing</div></div><span class="pill">Proje</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Alışkanlıklar</h2>
+    <div class="chips">
+      <div class="chip on">🏃 Spor ✓</div>
+      <div class="chip on">📈 Piyasa rutini ✓</div>
+      <div class="chip">✍️ İçerik üretimi</div>
+    </div>
+    <div class="streak">🔥 Spor 5 gündür kesintisiz — bugün de devam!</div>
+  </div>
+
+  <div class="card">
+    <h2>Piyasa rutini</h2>
+    <div class="rut on"><div class="dotk"></div><span>Piyasa rejimi kontrolü (SPY / QQQ)</span></div>
+    <div class="rut on"><div class="dotk"></div><span>İzleme listesini tara</span></div>
+    <div class="rut on"><div class="dotk"></div><span>Haber ve earnings takvimi</span></div>
+    <div class="rut"><div class="dotk"></div><span>Gün planını yaz</span></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="on">☀️</button><button>✓</button><button>🧩</button><button>📈</button><button>✍️</button><button>🌱</button>
+</div>
+</body>
+</html>

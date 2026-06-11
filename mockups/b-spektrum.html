@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasarım B · Spektrum — Bora OS</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0b0d10;
+  --card: #14171c;
+  --line: #232830;
+  --txt: #e9edf3;
+  --mut: #8a93a3;
+  --gorev: #3da5ff;   /* mavi */
+  --aliskanlik: #2fd573; /* yeşil */
+  --rutin: #ffb224;   /* amber */
+  --icerik: #b16dff;  /* mor */
+}
+body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--txt); }
+.tag {
+  position: fixed; top: 10px; right: 10px; z-index: 99;
+  background: #1c2128; border: 1px solid var(--line);
+  color: var(--mut); font-size: 11px; padding: 4px 10px; border-radius: 99px;
+}
+.wrap { max-width: 430px; margin: 0 auto; padding: 22px 16px 96px; }
+.date { font-size: 13px; color: var(--mut); letter-spacing: 1px; text-transform: uppercase; }
+h1 { font-size: 26px; margin: 4px 0 18px; }
+
+/* üst istatistik şeridi */
+.stats { display: flex; gap: 10px; margin-bottom: 18px; }
+.stat {
+  flex: 1; border-radius: 16px; padding: 13px 12px;
+  background: var(--card); border: 1px solid var(--line);
+  border-top: 3px solid var(--c);
+}
+.stat .n { font-size: 24px; font-weight: bold; color: var(--c); }
+.stat .l { font-size: 11px; color: var(--mut); margin-top: 3px; }
+
+.sec {
+  background: var(--card); border: 1px solid var(--line);
+  border-left: 4px solid var(--c);
+  border-radius: 16px; padding: 16px; margin-bottom: 14px;
+}
+.sec h2 { font-size: 13px; color: var(--c); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.sec h2 .cnt { margin-left: auto; color: var(--mut); font-weight: normal; font-size: 12px; }
+
+.row { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: none; }
+.ck {
+  width: 24px; height: 24px; min-width: 24px; border-radius: 7px;
+  border: 2px solid #333b47; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: transparent;
+}
+.row.done .ck { background: var(--c); border-color: var(--c); color: #0b0d10; font-weight: bold; }
+.row.done .t { text-decoration: line-through; color: var(--mut); }
+.row .t { font-size: 15px; line-height: 1.35; }
+.row .s { font-size: 12px; color: var(--mut); margin-top: 1px; }
+.due { margin-left: auto; font-size: 11px; color: var(--c); border: 1px solid var(--c); border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+.due.late { color: #ff5d5d; border-color: #ff5d5d; }
+
+/* alışkanlık ısı haritası */
+.hab { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.hab:last-child { border-bottom: none; }
+.hab .top { display: flex; align-items: center; gap: 8px; font-size: 14.5px; }
+.hab .fire { margin-left: auto; font-size: 12px; color: var(--rutin); }
+.week { display: flex; gap: 5px; margin-top: 8px; }
+.d { flex: 1; height: 9px; border-radius: 4px; background: #20262e; }
+.d.on { background: var(--aliskanlik); }
+.d.today { outline: 2px solid #fff3; }
+.btn {
+  display: inline-block; margin-top: 4px; width: 100%;
+  background: var(--aliskanlik); color: #08130c; font-weight: bold;
+  text-align: center; padding: 11px; border-radius: 12px; font-size: 14px;
+}
+
+/* ilerleme barı */
+.bar { height: 8px; border-radius: 99px; background: #20262e; margin-top: 10px; overflow: hidden; }
+.bar div { height: 100%; border-radius: 99px; background: var(--c); }
+
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; display: flex;
+  background: #0e1114ee; backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+  padding: 8px 4px 16px;
+}
+.nav a { flex: 1; text-align: center; font-size: 10.5px; color: var(--mut); text-decoration: none; }
+.nav a span { display: block; font-size: 19px; margin-bottom: 2px; }
+.nav a.on { color: var(--ac); font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="tag">Tasarım B · Spektrum</div>
+<div class="wrap">
+  <div class="date">11 Haziran · Perşembe</div>
+  <h1>Bugün ne yapıyoruz?</h1>
+
+  <div class="stats">
+    <div class="stat" style="--c:var(--gorev)"><div class="n">2/4</div><div class="l">GÖREV</div></div>
+    <div class="stat" style="--c:var(--aliskanlik)"><div class="n">2/3</div><div class="l">ALIŞKANLIK</div></div>
+    <div class="stat" style="--c:var(--rutin)"><div class="n">3/4</div><div class="l">RUTİN</div></div>
+    <div class="stat" style="--c:var(--icerik)"><div class="n">1</div><div class="l">YAYIN</div></div>
+  </div>
+
+  <div class="sec" style="--c:var(--gorev)">
+    <h2>📋 GÖREVLER <span class="cnt">2 açık</span></h2>
+    <div class="row done"><div class="ck">✓</div><div><div class="t">hissetezcisi v3.0'ı web'e yükle</div><div class="s">AI · hissetezcisi</div></div></div>
+    <div class="row"><div class="ck"></div><div><div class="t">V2 Faz 5 hafta sonu sprinti</div><div class="s">Proje · V2 data+rules</div></div><span class="due">13 Haz</span></div>
+    <div class="row"><div class="ck"></div><div><div class="t">qswing Parça 2: EMA takip + bildirim</div><div class="s">Proje · qswing</div></div></div>
+    <div class="bar"><div style="width:50%"></div></div>
+  </div>
+
+  <div class="sec" style="--c:var(--aliskanlik)">
+    <h2>🔥 ALIŞKANLIKLAR <span class="cnt">son 7 gün</span></h2>
+    <div class="hab">
+      <div class="top">🏃 Spor / hareket <span class="fire">🔥 5 gün</span></div>
+      <div class="week"><div class="d on"></div><div class="d on"></div><div class="d"></div><div class="d on"></div><div class="d on"></div><div class="d on"></div><div class="d on today"></div></div>
+    </div>
+    <div class="hab">
+      <div class="top">📈 Piyasa rutini <span class="fire">🔥 7 gün</span></div>
+      <div class="week"><div class="d on"></div><div class="d on"></div><div class="d on"></div><div class="d on"></div><div class="d on"></div><div class="d on"></div><div class="d on today"></div></div>
+    </div>
+    <div class="hab">
+      <div class="top">✍️ İçerik üretimi</div>
+      <div class="week"><div class="d on"></div><div class="d"></div><div class="d on"></div><div class="d on"></div><div class="d"></div><div class="d on"></div><div class="d today"></div></div>
+      <div class="btn">✓ Bugünü işaretle</div>
+    </div>
+  </div>
+
+  <div class="sec" style="--c:var(--rutin)">
+    <h2>📈 PİYASA RUTİNİ <span class="cnt">3/4</span></h2>
+    <div class="row done"><div class="ck">✓</div><div class="t">Piyasa rejimi kontrolü (SPY / QQQ)</div></div>
+    <div class="row done"><div class="ck">✓</div><div class="t">İzleme listesini tara</div></div>
+    <div class="row done"><div class="ck">✓</div><div class="t">Haber ve earnings takvimi</div></div>
+    <div class="row"><div class="ck"></div><div class="t">Gün planını yaz</div></div>
+  </div>
+
+  <div class="sec" style="--c:var(--icerik)">
+    <h2>✍️ BUGÜN YAYIN</h2>
+    <div class="row"><div class="ck"></div><div><div class="t">Qullamaggie 4. hafta modülü</div><div class="s">Hazır → yayınla</div></div><span class="due">Skool</span></div>
+  </div>
+</div>
+
+<div class="nav">
+  <a class="on" style="--ac:#3da5ff"><span>☀️</span>Bugün</a>
+  <a><span>✓</span>Görevler</a>
+  <a><span>🧩</span>Projeler</a>
+  <a><span>📈</span>Trading</a>
+  <a><span>✍️</span>İçerik</a>
+  <a><span>🌱</span>Gelişim</a>
+</div>
+</body>
+</html>

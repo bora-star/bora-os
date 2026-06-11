@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasarım C · Güneş — Bora OS</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #131210;
+  --card: #1c1a16;
+  --card2: #262218;
+  --line: #322d24;
+  --txt: #f2ede2;
+  --mut: #9b937f;
+  --gold: #f5b942;
+  --gold2: #ffd98a;
+  --green: #9ec46a;
+}
+body { font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--txt); }
+.tag {
+  position: fixed; top: 10px; right: 10px; z-index: 99;
+  background: rgba(245,185,66,0.12); border: 1px solid rgba(245,185,66,0.4);
+  color: var(--gold2); font-size: 11px; padding: 4px 10px; border-radius: 99px;
+}
+.wrap { max-width: 430px; margin: 0 auto; padding: 26px 18px 96px; }
+
+.greet { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+.sun {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd98a, #f5b942 60%, #d99a1e);
+  box-shadow: 0 0 34px rgba(245,185,66,0.45);
+}
+.greet h1 { font-size: 24px; line-height: 1.25; }
+.greet .d { font-size: 13px; color: var(--mut); margin-top: 3px; }
+
+/* gün ilerlemesi */
+.daybar { margin-bottom: 22px; }
+.daybar .lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--mut); margin-bottom: 8px; }
+.daybar .lbl b { color: var(--gold2); }
+.track { height: 12px; border-radius: 99px; background: var(--card2); overflow: hidden; }
+.track div {
+  height: 100%; width: 64%; border-radius: 99px;
+  background: linear-gradient(90deg, #d99a1e, #f5b942, #ffd98a);
+  box-shadow: 0 0 14px rgba(245,185,66,0.5);
+}
+
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 20px; padding: 18px; margin-bottom: 16px;
+}
+.card h2 { font-size: 12.5px; letter-spacing: 2px; color: var(--gold); margin-bottom: 14px; }
+
+.task { display: flex; align-items: center; gap: 13px; padding: 11px 0; border-bottom: 1px dashed var(--line); }
+.task:last-child { border-bottom: none; }
+.ck {
+  width: 26px; height: 26px; min-width: 26px; border-radius: 50%;
+  border: 2px solid #4a4334; color: transparent;
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.task.done .ck { background: var(--gold); border-color: var(--gold); color: #131210; font-weight: bold; }
+.task.done .t { color: var(--mut); text-decoration: line-through; }
+.task .t { font-size: 15.5px; line-height: 1.4; }
+.task .s { font-size: 12px; color: var(--mut); margin-top: 2px; }
+.tag2 { margin-left: auto; font-size: 11px; color: var(--gold2); white-space: nowrap; }
+
+/* alışkanlık taşları */
+.stones { display: flex; gap: 10px; }
+.stone {
+  flex: 1; text-align: center; padding: 14px 6px; border-radius: 16px;
+  background: var(--card2); border: 1px solid var(--line);
+}
+.stone .e { font-size: 24px; }
+.stone .n { font-size: 12px; color: var(--mut); margin-top: 6px; line-height: 1.3; }
+.stone.on { background: rgba(245,185,66,0.13); border-color: var(--gold); }
+.stone.on .n { color: var(--gold2); font-weight: bold; }
+.stone .f { font-size: 11px; color: var(--gold); margin-top: 4px; }
+
+.quote {
+  text-align: center; font-size: 13.5px; color: var(--mut);
+  font-style: italic; padding: 4px 12px 18px;
+}
+.quote b { color: var(--gold2); }
+
+.rut { display: flex; align-items: center; gap: 12px; padding: 9px 0; font-size: 15px; }
+.dotk { width: 20px; height: 20px; min-width: 20px; border-radius: 50%; border: 2px solid #4a4334; }
+.rut.on .dotk { background: var(--green); border-color: var(--green); }
+.rut.on span { color: var(--mut); text-decoration: line-through; }
+
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0; display: flex;
+  background: #161411f2; backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+  padding: 9px 4px 17px;
+}
+.nav a { flex: 1; text-align: center; font-size: 10.5px; color: var(--mut); text-decoration: none; }
+.nav a span { display: block; font-size: 19px; margin-bottom: 2px; }
+.nav a.on { color: var(--gold); font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="tag">Tasarım C · Güneş</div>
+<div class="wrap">
+  <div class="greet">
+    <div class="sun"></div>
+    <div>
+      <h1>Günaydın, Bora</h1>
+      <div class="d">11 Haziran Perşembe · Güne güçlü başla</div>
+    </div>
+  </div>
+
+  <div class="daybar">
+    <div class="lbl"><span>Günün ilerlemesi</span><b>%64</b></div>
+    <div class="track"><div></div></div>
+  </div>
+
+  <div class="card">
+    <h2>BUGÜNÜN GÖREVLERİ</h2>
+    <div class="task done"><div class="ck">✓</div><div><div class="t">hissetezcisi v3.0'ı web'e yükle</div><div class="s">AI · hissetezcisi</div></div></div>
+    <div class="task"><div class="ck"></div><div><div class="t">V2 Faz 5 hafta sonu sprinti</div><div class="s">Proje · V2 data+rules</div></div><span class="tag2">13 Haz</span></div>
+    <div class="task"><div class="ck"></div><div><div class="t">qswing Parça 2: EMA takip + bildirim</div><div class="s">Proje · qswing</div></div></div>
+  </div>
+
+  <div class="card">
+    <h2>ALIŞKANLIKLAR</h2>
+    <div class="stones">
+      <div class="stone on"><div class="e">🏃</div><div class="n">Spor</div><div class="f">🔥 5 gün</div></div>
+      <div class="stone on"><div class="e">📈</div><div class="n">Piyasa rutini</div><div class="f">🔥 7 gün</div></div>
+      <div class="stone"><div class="e">✍️</div><div class="n">İçerik üretimi</div></div>
+    </div>
+  </div>
+
+  <div class="quote">Bir taş daha koy — <b>✍️ İçerik üretimi</b> ile günü 3/3 kapat.</div>
+
+  <div class="card">
+    <h2>PİYASA RUTİNİ</h2>
+    <div class="rut on"><div class="dotk"></div><span>Piyasa rejimi kontrolü (SPY / QQQ)</span></div>
+    <div class="rut on"><div class="dotk"></div><span>İzleme listesini tara</span></div>
+    <div class="rut on"><div class="dotk"></div><span>Haber ve earnings takvimi</span></div>
+    <div class="rut"><div class="dotk"></div><span>Gün planını yaz</span></div>
+  </div>
+</div>
+
+<div class="nav">
+  <a class="on"><span>☀️</span>Bugün</a>
+  <a><span>✓</span>Görevler</a>
+  <a><span>🧩</span>Projeler</a>
+  <a><span>📈</span>Trading</a>
+  <a><span>✍️</span>İçerik</a>
+  <a><span>🌱</span>Gelişim</a>
+</div>
+</body>
+</html>
