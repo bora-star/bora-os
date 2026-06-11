@@ -1,15 +1,25 @@
 :root {
-  --bg: #0d1117;
-  --card: #161b22;
-  --card2: #1c2330;
-  --border: #2a3140;
-  --text: #e6e9ef;
-  --muted: #8b94a3;
-  --accent: #4f8ff7;
-  --green: #3fb950;
-  --red: #f85149;
-  --amber: #d29922;
+  --bg: #0b0d10;
+  --card: #14171c;
+  --card2: #1c2128;
+  --border: #232830;
+  --text: #e9edf3;
+  --muted: #8a93a3;
+  --blue: #3da5ff;
+  --green: #2fd573;
+  --amber: #ffb224;
+  --purple: #b16dff;
+  --cyan: #35d0c5;
+  --red: #ff5d5d;
+  --accent: #3da5ff;
 }
+
+/* bölüm renk sınıfları (Spektrum) */
+.ac-blue   { --c: var(--blue); }
+.ac-green  { --c: var(--green); }
+.ac-amber  { --c: var(--amber); }
+.ac-purple { --c: var(--purple); }
+.ac-cyan   { --c: var(--cyan); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -43,7 +53,7 @@ html, body {
   font-weight: bold;
   text-align: center;
 }
-.login-logo span { color: var(--accent); }
+.login-logo span { color: var(--blue); }
 .login-sub {
   text-align: center;
   color: var(--muted);
@@ -63,7 +73,7 @@ input, select {
   outline: none;
   min-width: 0;
 }
-input:focus, select:focus { border-color: var(--accent); }
+input:focus, select:focus { border-color: var(--blue); }
 
 button {
   font-family: inherit;
@@ -73,8 +83,8 @@ button {
   cursor: pointer;
 }
 .btn-primary {
-  background: var(--accent);
-  color: #fff;
+  background: var(--blue);
+  color: #04111d;
   padding: 12px 18px;
   font-weight: bold;
 }
@@ -98,12 +108,12 @@ header {
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
-  background: rgba(13, 17, 23, 0.92);
+  background: rgba(11, 13, 16, 0.92);
   backdrop-filter: blur(8px);
   z-index: 10;
 }
 .brand { font-size: 20px; font-weight: bold; white-space: nowrap; }
-.brand span { color: var(--accent); }
+.brand span { color: var(--blue); }
 
 .top-nav { display: none; gap: 6px; flex: 1; }
 .top-nav button {
@@ -126,22 +136,63 @@ main {
   padding-bottom: calc(86px + env(safe-area-inset-bottom));
 }
 
+.date {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
 h1 { font-size: 24px; margin-bottom: 16px; }
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-left: 4px solid var(--c, var(--border));
+  border-radius: 16px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
-.card h2 { font-size: 15px; color: var(--muted); margin-bottom: 12px; font-weight: bold; }
+.card h2 {
+  font-size: 13px;
+  color: var(--c, var(--muted));
+  margin-bottom: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card h2 .cnt {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: normal;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- İstatistik şeridi (Bugün) ---------- */
+.stats { display: flex; gap: 10px; margin-bottom: 16px; }
+.stat {
+  flex: 1;
+  border-radius: 14px;
+  padding: 12px 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--c);
+  min-width: 0;
+}
+.stat .n { font-size: 22px; font-weight: bold; color: var(--c); white-space: nowrap; }
+.stat .l { font-size: 10.5px; color: var(--muted); margin-top: 3px; letter-spacing: 0.5px; }
 
 /* ---------- Alt sekme (telefon) ---------- */
 .bottom-nav {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   display: flex;
-  background: rgba(13, 17, 23, 0.95);
+  background: rgba(11, 13, 16, 0.95);
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
@@ -152,14 +203,20 @@ h1 { font-size: 24px; margin-bottom: 16px; }
   background: transparent;
   color: var(--muted);
   padding: 10px 0 12px;
-  font-size: 12px;
+  font-size: 11px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
 }
-.bottom-nav button span { font-size: 20px; }
-.bottom-nav button.active { color: var(--accent); font-weight: bold; }
+.bottom-nav button span { font-size: 19px; }
+.bottom-nav button.active { font-weight: bold; }
+.bottom-nav button[data-tab="bugun"].active,
+.bottom-nav button[data-tab="gorevler"].active { color: var(--blue); }
+.bottom-nav button[data-tab="projeler"].active { color: var(--cyan); }
+.bottom-nav button[data-tab="trading"].active { color: var(--amber); }
+.bottom-nav button[data-tab="icerik"].active { color: var(--purple); }
+.bottom-nav button[data-tab="gelisim"].active { color: var(--green); }
 
 @media (min-width: 768px) {
   .top-nav { display: flex; }
@@ -184,17 +241,18 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 .check {
   width: 26px; height: 26px;
   min-width: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
+  border-radius: 8px;
+  border: 2px solid #333b47;
   background: transparent;
   color: transparent;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
 }
 .check.on {
-  background: var(--green);
-  border-color: var(--green);
-  color: #fff;
+  background: var(--c, var(--green));
+  border-color: var(--c, var(--green));
+  color: #0b0d10;
+  font-weight: bold;
 }
 
 .badge {
@@ -209,8 +267,8 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 .badge.beklemede { color: var(--amber); }
 .badge.tamamlandi { color: var(--muted); }
 .badge.yuklenecek { color: var(--amber); }
-.badge.guncelleme-bekliyor { color: var(--accent); }
-.badge.late { color: var(--red); }
+.badge.guncelleme-bekliyor { color: var(--blue); }
+.badge.late { color: var(--red); border: 1px solid var(--red); background: transparent; }
 
 .del-btn {
   background: transparent;
@@ -219,7 +277,48 @@ h1 { font-size: 24px; margin-bottom: 16px; }
   padding: 4px 8px;
 }
 
-/* ---------- Alışkanlık çipleri ---------- */
+/* ---------- İlerleme barı ---------- */
+.bar {
+  height: 8px;
+  background: #20262e;
+  border-radius: 99px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.bar > div { height: 100%; background: var(--c, var(--green)); border-radius: 99px; }
+
+/* ---------- Alışkanlık satırları (7 günlük ısı çubukları) ---------- */
+.habit-row {
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.habit-row:last-child { border-bottom: none; }
+.habit-row .top { display: flex; align-items: center; gap: 8px; font-size: 14.5px; }
+.habit-row .top .name { flex: 1; min-width: 0; }
+.habit-row .fire { font-size: 12px; color: var(--amber); white-space: nowrap; }
+.week { display: flex; gap: 5px; margin-top: 8px; }
+.d { flex: 1; height: 9px; border-radius: 4px; background: #20262e; }
+.d.on { background: var(--green); }
+.d.today { outline: 2px solid rgba(255, 255, 255, 0.25); }
+
+.mark-btn {
+  margin-top: 10px;
+  width: 100%;
+  background: var(--green);
+  color: #08130c;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 11px;
+  font-size: 14px;
+}
+.mark-btn.off {
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green);
+  font-weight: normal;
+}
+
+/* eski çipler (yedek) */
 .chip-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .chip {
   display: flex;
@@ -233,7 +332,7 @@ h1 { font-size: 24px; margin-bottom: 16px; }
   font-size: 15px;
 }
 .chip.on {
-  background: rgba(63, 185, 80, 0.15);
+  background: rgba(47, 213, 115, 0.15);
   border-color: var(--green);
   color: var(--green);
   font-weight: bold;
@@ -255,7 +354,7 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 .project .next {
   margin-top: 7px;
   font-size: 14px;
-  color: var(--accent);
+  color: var(--c, var(--blue));
 }
 .project select {
   padding: 5px 8px;
@@ -301,17 +400,16 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 .empty { color: var(--muted); font-size: 14px; padding: 8px 4px; }
 
 /* ---------- Trading ---------- */
-.badge.izlemede { color: var(--accent); }
+.badge.izlemede { color: var(--amber); }
 .badge.tetiklendi { color: var(--green); }
 .badge.cikti { color: var(--muted); }
 .ticker { font-weight: bold; letter-spacing: 0.5px; }
 
 /* ---------- İçerik ---------- */
-.badge.skool { color: #c084fc; }
-.badge.twitter { color: #60a5fa; }
-.badge.youtube { color: #f87171; }
-.pipeline-group { margin-bottom: 16px; }
-.pipeline-group h2 .count { color: var(--text); }
+.badge.skool { color: var(--purple); }
+.badge.twitter { color: var(--blue); }
+.badge.youtube { color: var(--red); }
+.pipeline-group { margin-bottom: 14px; }
 .move-btn {
   background: var(--card2);
   color: var(--text);
@@ -334,47 +432,13 @@ textarea {
   outline: none;
   resize: vertical;
 }
-textarea:focus { border-color: var(--accent); }
-
-.habit-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 4px;
-  border-bottom: 1px solid var(--border);
-}
-.habit-row:last-child { border-bottom: none; }
-.habit-row { flex-wrap: wrap; }
-.habit-row .name { flex: 1; font-size: 15px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 600px) {
-  .habit-row .name { flex: 1 1 100%; }
-  .habit-row .dots { margin-left: 2px; }
-  .habit-row .del-btn { margin-left: auto; }
-}
-.habit-row .streak { color: var(--amber); font-size: 13px; white-space: nowrap; }
-.dots { display: flex; gap: 5px; }
-.dot {
-  width: 14px; height: 14px;
-  border-radius: 50%;
-  background: var(--card2);
-  border: 1px solid var(--border);
-}
-.dot.on { background: var(--green); border-color: var(--green); }
-.dot.today { box-shadow: 0 0 0 2px var(--accent); }
+textarea:focus { border-color: var(--purple); }
 
 .goal-row { padding: 11px 4px; border-bottom: 1px solid var(--border); }
 .goal-row:last-child { border-bottom: none; }
 .goal-row .row1 { display: flex; align-items: center; gap: 10px; }
 .goal-row .title { flex: 1; font-size: 15px; }
 .goal-row.tamam .title { color: var(--muted); text-decoration: line-through; }
-.bar {
-  height: 7px;
-  background: var(--card2);
-  border-radius: 99px;
-  margin-top: 9px;
-  overflow: hidden;
-}
-.bar > div { height: 100%; background: var(--green); border-radius: 99px; }
 .mini-btn {
   background: var(--card2);
   color: var(--text);
@@ -386,10 +450,12 @@ textarea:focus { border-color: var(--accent); }
 
 .journal-entry { padding: 10px 4px; border-bottom: 1px solid var(--border); }
 .journal-entry:last-child { border-bottom: none; }
-.journal-entry .date { color: var(--accent); font-size: 12px; font-weight: bold; margin-bottom: 4px; }
+.journal-entry .date2 { color: var(--purple); font-size: 12px; font-weight: bold; margin-bottom: 4px; }
 .journal-entry .text { font-size: 15px; line-height: 1.5; white-space: pre-wrap; }
 
 @media (max-width: 480px) {
   .bottom-nav button { font-size: 10px; }
   .bottom-nav button span { font-size: 18px; }
+  .stats { flex-wrap: wrap; }
+  .stat { flex: 1 1 40%; }
 }

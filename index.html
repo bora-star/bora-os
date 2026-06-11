@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#0b0d10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bora OS">
 <title>Bora OS</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='%234f8ff7' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0d10'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='%233da5ff' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -44,25 +44,29 @@
   <main>
     <!-- BUGÜN -->
     <section id="tab-bugun" class="tab">
-      <h1 id="today-title"></h1>
+      <div class="date" id="today-title"></div>
+      <h1>Bugün ne yapıyoruz?</h1>
 
-      <div class="card">
-        <h2>Bugünün görevleri</h2>
+      <div class="stats" id="today-stats"></div>
+
+      <div class="card ac-blue">
+        <h2>📋 Görevler <span class="cnt" id="today-task-cnt"></span></h2>
         <div id="today-tasks"></div>
+        <div class="bar hidden" id="today-task-bar-wrap"><div id="today-task-bar"></div></div>
       </div>
 
-      <div class="card">
-        <h2>Alışkanlıklar</h2>
-        <div id="today-habits" class="chip-row"></div>
-      </div>
-
-      <div class="card hidden" id="today-content-card">
-        <h2>Bugün yayınlanacak içerik</h2>
+      <div class="card ac-purple hidden" id="today-content-card">
+        <h2>✍️ Bugün yayın</h2>
         <div id="today-content"></div>
       </div>
 
-      <div class="card">
-        <h2 id="checklist-title">Piyasa rutini</h2>
+      <div class="card ac-green">
+        <h2>🔥 Alışkanlıklar <span class="cnt">son 7 gün</span></h2>
+        <div id="today-habits"></div>
+      </div>
+
+      <div class="card ac-amber">
+        <h2 id="checklist-title">📈 Piyasa rutini</h2>
         <div id="today-checklist"></div>
       </div>
     </section>
@@ -83,12 +87,12 @@
         <input id="new-task-due" type="date" title="Tarih (isteğe bağlı)">
         <button id="add-task-btn" class="btn-primary">Ekle</button>
       </div>
-      <div class="card">
-        <h2>Açık görevler</h2>
+      <div class="card ac-blue">
+        <h2>📋 Açık görevler</h2>
         <div id="open-tasks"></div>
       </div>
-      <div class="card">
-        <h2>Tamamlananlar <span class="muted" id="done-count"></span></h2>
+      <div class="card ac-blue">
+        <h2>✅ Tamamlananlar <span class="muted" id="done-count"></span></h2>
         <div id="done-tasks"></div>
       </div>
     </section>
@@ -97,18 +101,18 @@
     <section id="tab-projeler" class="tab hidden">
       <h1>Projeler &amp; AI</h1>
 
-      <div class="card">
-        <h2>Projeler</h2>
+      <div class="card ac-cyan">
+        <h2>🧩 Projeler</h2>
         <div id="projects-list"></div>
       </div>
 
-      <div class="card">
-        <h2>Skill envanteri</h2>
+      <div class="card ac-cyan">
+        <h2>🤖 Skill envanteri</h2>
         <div id="skills-list"></div>
       </div>
 
-      <div class="card">
-        <h2>Fikir havuzu</h2>
+      <div class="card ac-cyan">
+        <h2>💡 Fikir havuzu</h2>
         <div class="add-row">
           <input id="new-idea-text" type="text" placeholder="Yeni fikir...">
           <select id="new-idea-kind">
@@ -126,8 +130,8 @@
     <section id="tab-trading" class="tab hidden">
       <h1>Trading</h1>
 
-      <div class="card">
-        <h2>İzleme listesi</h2>
+      <div class="card ac-amber">
+        <h2>👁 İzleme listesi</h2>
         <div class="add-row">
           <input id="new-watch-ticker" type="text" placeholder="Hisse (örn. NVDA)" style="flex:0 1 130px; text-transform:uppercase">
           <input id="new-watch-reason" type="text" placeholder="Neden takipte?">
@@ -137,13 +141,13 @@
         <div id="watchlist"></div>
       </div>
 
-      <div class="card">
-        <h2>Günlük rutin (bugün)</h2>
+      <div class="card ac-amber">
+        <h2>📈 Günlük rutin (bugün)</h2>
         <div id="trading-daily"></div>
       </div>
 
-      <div class="card">
-        <h2>Hafta sonu rutini</h2>
+      <div class="card ac-amber">
+        <h2>🧘 Hafta sonu rutini</h2>
         <div id="trading-weekend"></div>
       </div>
     </section>
@@ -163,8 +167,8 @@
         <button id="add-content-btn" class="btn-primary">Ekle</button>
       </div>
 
-      <div class="card">
-        <h2>Yayın takvimi</h2>
+      <div class="card ac-purple">
+        <h2>📅 Yayın takvimi</h2>
         <div id="content-calendar"></div>
       </div>
 
@@ -175,8 +179,8 @@
     <section id="tab-gelisim" class="tab hidden">
       <h1>Gelişim</h1>
 
-      <div class="card">
-        <h2>Alışkanlıklar — son 7 gün</h2>
+      <div class="card ac-green">
+        <h2>🔥 Alışkanlıklar <span class="cnt">son 7 gün</span></h2>
         <div id="habit-history"></div>
         <div class="add-row" style="margin-top:14px; margin-bottom:0">
           <input id="new-habit-name" type="text" placeholder="Yeni alışkanlık...">
@@ -184,8 +188,8 @@
         </div>
       </div>
 
-      <div class="card">
-        <h2>Hedefler</h2>
+      <div class="card ac-amber">
+        <h2>🎯 Hedefler</h2>
         <div class="add-row">
           <input id="new-goal-title" type="text" placeholder="Yeni hedef...">
           <select id="new-goal-horizon">
@@ -198,8 +202,8 @@
         <div id="goals-list"></div>
       </div>
 
-      <div class="card">
-        <h2>Journal</h2>
+      <div class="card ac-purple">
+        <h2>📓 Journal</h2>
         <textarea id="journal-text" placeholder="Bugünden aklında kalan ne?" rows="3"></textarea>
         <button id="save-journal-btn" class="btn-primary" style="margin-top:10px">Kaydet</button>
         <div id="journal-list" style="margin-top:14px"></div>
@@ -232,6 +236,6 @@
   </div>
 </div>
 
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=2"></script>
 </body>
 </html>
