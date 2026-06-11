@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bora OS">
+<title>Bora OS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d1117'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='%234f8ff7' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Giriş ekranı -->
+<div id="login-view" class="hidden">
+  <div class="login-box">
+    <div class="login-logo">Bora <span>OS</span></div>
+    <p class="login-sub">Kişisel planlama ve yönetim merkezi</p>
+    <input id="login-email" type="email" placeholder="E-posta" autocomplete="username">
+    <input id="login-pass" type="password" placeholder="Şifre" autocomplete="current-password">
+    <button id="login-btn" class="btn-primary">Giriş yap</button>
+    <p id="login-error" class="login-error hidden"></p>
+  </div>
+</div>
+
+<!-- Ana uygulama -->
+<div id="app-view" class="hidden">
+  <header>
+    <div class="brand">Bora <span>OS</span></div>
+    <nav id="top-nav" class="top-nav">
+      <button data-tab="bugun" class="active">Bugün</button>
+      <button data-tab="gorevler">Görevler</button>
+      <button data-tab="projeler">Projeler &amp; AI</button>
+    </nav>
+    <button id="settings-btn" class="icon-btn" title="Ayarlar">⚙︎</button>
+  </header>
+
+  <main>
+    <!-- BUGÜN -->
+    <section id="tab-bugun" class="tab">
+      <h1 id="today-title"></h1>
+
+      <div class="card">
+        <h2>Bugünün görevleri</h2>
+        <div id="today-tasks"></div>
+      </div>
+
+      <div class="card">
+        <h2>Alışkanlıklar</h2>
+        <div id="today-habits" class="chip-row"></div>
+      </div>
+
+      <div class="card">
+        <h2 id="checklist-title">Piyasa rutini</h2>
+        <div id="today-checklist"></div>
+      </div>
+    </section>
+
+    <!-- GÖREVLER -->
+    <section id="tab-gorevler" class="tab hidden">
+      <h1>Görevler</h1>
+      <div class="add-row">
+        <input id="new-task-title" type="text" placeholder="Yeni görev...">
+        <select id="new-task-area">
+          <option value="genel">Genel</option>
+          <option value="proje">Proje</option>
+          <option value="ai">AI</option>
+          <option value="trading">Trading</option>
+          <option value="icerik">İçerik</option>
+          <option value="gelisim">Gelişim</option>
+        </select>
+        <input id="new-task-due" type="date" title="Tarih (isteğe bağlı)">
+        <button id="add-task-btn" class="btn-primary">Ekle</button>
+      </div>
+      <div class="card">
+        <h2>Açık görevler</h2>
+        <div id="open-tasks"></div>
+      </div>
+      <div class="card">
+        <h2>Tamamlananlar <span class="muted" id="done-count"></span></h2>
+        <div id="done-tasks"></div>
+      </div>
+    </section>
+
+    <!-- PROJELER & AI -->
+    <section id="tab-projeler" class="tab hidden">
+      <h1>Projeler &amp; AI</h1>
+
+      <div class="card">
+        <h2>Projeler</h2>
+        <div id="projects-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Skill envanteri</h2>
+        <div id="skills-list"></div>
+      </div>
+
+      <div class="card">
+        <h2>Fikir havuzu</h2>
+        <div class="add-row">
+          <input id="new-idea-text" type="text" placeholder="Yeni fikir...">
+          <select id="new-idea-kind">
+            <option value="skill">Skill</option>
+            <option value="icerik">İçerik</option>
+            <option value="ogrenme">Öğrenme</option>
+            <option value="genel">Genel</option>
+          </select>
+          <button id="add-idea-btn" class="btn-primary">Ekle</button>
+        </div>
+        <div id="ideas-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Alt sekme çubuğu (telefon) -->
+  <nav id="bottom-nav" class="bottom-nav">
+    <button data-tab="bugun" class="active"><span>☀️</span>Bugün</button>
+    <button data-tab="gorevler"><span>✓</span>Görevler</button>
+    <button data-tab="projeler"><span>🧩</span>Projeler</button>
+  </nav>
+
+  <!-- Ayarlar -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-box">
+      <h2>Ayarlar</h2>
+      <label>Yeni şifre</label>
+      <input id="new-pass" type="password" placeholder="En az 8 karakter" autocomplete="new-password">
+      <button id="change-pass-btn" class="btn-primary">Şifreyi değiştir</button>
+      <p id="settings-msg" class="muted"></p>
+      <hr>
+      <button id="logout-btn" class="btn-danger">Çıkış yap</button>
+      <button id="close-settings-btn" class="btn-ghost">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
