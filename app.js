@@ -8,8 +8,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (id) => document.getElementById(id);
 const state = {
   tasks: [], projects: [], skills: [], ideas: [],
-  habits: [], habitChecks: [], checklistItems: [], checklistChecks: [],
-  watchlist: [], content: [], goals: [], journal: [], weekChecks: [],
+  watchlist: [], content: [], goals: [], journal: [],
 };
 
 const AREA_LABELS = {
@@ -33,15 +32,6 @@ function dateStr(d) {
 }
 function todayStr() {
   return dateStr(new Date());
-}
-function daysAgoStr(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return dateStr(d);
-}
-function isWeekend() {
-  const g = new Date().getDay();
-  return g === 0 || g === 6;
 }
 function fmtDate(s) {
   if (!s) return "";
@@ -96,35 +86,24 @@ async function login() {
 
 async function loadAll() {
   const t = todayStr();
-  const [tasks, projects, skills, ideas, habits, habitChecks, clItems, clChecks,
-         watchlist, content, goals, journal, weekChecks] = await Promise.all([
+  const [tasks, projects, skills, ideas, watchlist, content, goals, journal] = await Promise.all([
     db.from("bos_tasks").select("*").order("done").order("due_date", { ascending: true, nullsFirst: false }).order("created_at"),
     db.from("bos_projects").select("*").order("sort"),
     db.from("bos_skills").select("*").order("name"),
     db.from("bos_ideas").select("*").neq("status", "yapildi").order("created_at", { ascending: false }),
-    db.from("bos_habits").select("*").eq("active", true).order("sort"),
-    db.from("bos_habit_checks").select("*").eq("date", t),
-    db.from("bos_checklist_items").select("*").eq("active", true).order("sort"),
-    db.from("bos_checklist_checks").select("*").eq("date", t),
     db.from("bos_watchlist").select("*").neq("status", "cikti").order("created_at"),
     db.from("bos_content").select("*").order("publish_date", { ascending: true, nullsFirst: false }).order("created_at"),
     db.from("bos_goals").select("*").order("created_at"),
     db.from("bos_journal").select("*").order("date", { ascending: false }).order("created_at", { ascending: false }).limit(10),
-    db.from("bos_habit_checks").select("*").gte("date", daysAgoStr(6)),
   ]);
   state.tasks = tasks.data ?? [];
   state.projects = projects.data ?? [];
   state.skills = skills.data ?? [];
   state.ideas = ideas.data ?? [];
-  state.habits = habits.data ?? [];
-  state.habitChecks = habitChecks.data ?? [];
-  state.checklistItems = clItems.data ?? [];
-  state.checklistChecks = clChecks.data ?? [];
   state.watchlist = watchlist.data ?? [];
   state.content = content.data ?? [];
   state.goals = goals.data ?? [];
   state.journal = journal.data ?? [];
-  state.weekChecks = weekChecks.data ?? [];
   renderAll();
 }
 
@@ -135,9 +114,7 @@ function renderAll() {
   renderSkills();
   renderIdeas();
   renderWatchlist();
-  renderTradingChecklists();
   renderContent();
-  renderHabitHistory();
   renderGoals();
   renderJournal();
 }
@@ -146,42 +123,6 @@ function renderAll() {
 
 function localDateOf(ts) {
   return dateStr(new Date(ts));
-}
-
-function habitWeekRow(h, opts = {}) {
-  const t = todayStr();
-  const days = [];
-  for (let i = 6; i >= 0; i--) days.push(daysAgoStr(i));
-  const checks = new Set(state.weekChecks.filter((c) => c.habit_id === h.id).map((c) => c.date));
-  let streak = 0;
-  for (let i = checks.has(t) ? 0 : 1; i <= 6; i++) {
-    if (checks.has(daysAgoStr(i))) streak++;
-    else break;
-  }
-  const onToday = checks.has(t);
-  const row = document.createElement("div");
-  row.className = "habit-row";
-  row.innerHTML = `
-    <div class="top">
-      <div class="name">${h.icon ?? ""} ${esc(h.name)}</div>
-      ${streak > 0 ? `<div class="fire">🔥 ${streak}${streak > 6 ? "+" : ""} gün</div>` : ""}
-      ${opts.removable ? '<button class="del-btn" title="Kaldır">✕</button>' : ""}
-    </div>
-    <div class="week">${days.map((d) =>
-      `<div class="d ${checks.has(d) ? "on" : ""} ${d === t ? "today" : ""}"></div>`).join("")}</div>
-    ${opts.markable ? `<button class="mark-btn ${onToday ? "off" : ""}">${onToday ? "✓ İşaretlendi — geri al" : "✓ Bugünü işaretle"}</button>` : ""}`;
-  if (opts.markable) {
-    row.querySelector(".mark-btn").addEventListener("click", () => toggleHabit(h.id, onToday));
-  }
-  if (opts.removable) {
-    row.querySelector(".del-btn").addEventListener("click", async () => {
-      if (confirm(`"${h.name}" alışkanlığı kaldırılsın mı? (Geçmişi silinmez)`)) {
-        await db.from("bos_habits").update({ active: false }).eq("id", h.id);
-        await loadAll();
-      }
-    });
-  }
-  return row;
 }
 
 function renderToday() {
@@ -213,35 +154,11 @@ function renderToday() {
     barWrap.classList.add("hidden");
   }
 
-  // Trading rutini (sayılar için önce hesapla)
-  const kind = isWeekend() ? "haftasonu" : "gunluk";
-  const kindItems = state.checklistItems.filter((i) => i.kind === kind);
-  const kindDone = state.checklistChecks.filter((c) => kindItems.some((i) => i.id === c.item_id)).length;
-
   // İstatistik şeridi
   const contentDue = state.content.filter((c) => c.status !== "yayinlandi" && c.publish_date && c.publish_date <= t);
   $("today-stats").innerHTML = `
     <div class="stat ac-blue"><div class="n">${doneToday.length}/${totalToday || doneToday.length}</div><div class="l">GÖREV</div></div>
-    <div class="stat ac-green"><div class="n">${state.habitChecks.length}/${state.habits.length}</div><div class="l">ALIŞKANLIK</div></div>
-    <div class="stat ac-amber"><div class="n">${kindDone}/${kindItems.length}</div><div class="l">RUTİN</div></div>
     <div class="stat ac-purple"><div class="n">${contentDue.length}</div><div class="l">YAYIN</div></div>`;
-
-  // Alışkanlıklar — 7 günlük çubuklar + işaretleme butonu
-  const hb = $("today-habits");
-  hb.innerHTML = "";
-  state.habits.forEach((h) => hb.appendChild(habitWeekRow(h, { markable: true })));
-
-  $("checklist-title").textContent = isWeekend() ? "🧘 Hafta sonu rutini" : "📈 Piyasa rutini";
-  const cl = $("today-checklist");
-  cl.innerHTML = "";
-  state.checklistItems.filter((i) => i.kind === kind).forEach((item) => {
-    const on = state.checklistChecks.some((c) => c.item_id === item.id);
-    const row = document.createElement("div");
-    row.className = "item" + (on ? " done" : "");
-    row.innerHTML = `<button class="check ${on ? "on" : ""}">✓</button><div class="grow"><div class="title">${esc(item.label)}</div></div>`;
-    row.querySelector(".check").addEventListener("click", () => toggleChecklist(item.id, on));
-    cl.appendChild(row);
-  });
 
   // Bugün yayınlanacak içerik
   const dueContent = state.content.filter((c) => c.status !== "yayinlandi" && c.publish_date && c.publish_date <= t);
@@ -266,24 +183,6 @@ function renderToday() {
       box.appendChild(row);
     });
   }
-}
-
-async function toggleHabit(habitId, on) {
-  if (on) {
-    await db.from("bos_habit_checks").delete().eq("habit_id", habitId).eq("date", todayStr());
-  } else {
-    await db.from("bos_habit_checks").insert({ habit_id: habitId, date: todayStr() });
-  }
-  await loadAll();
-}
-
-async function toggleChecklist(itemId, on) {
-  if (on) {
-    await db.from("bos_checklist_checks").delete().eq("item_id", itemId).eq("date", todayStr());
-  } else {
-    await db.from("bos_checklist_checks").insert({ item_id: itemId, date: todayStr() });
-  }
-  await loadAll();
 }
 
 /* ---------------- Görevler ---------------- */
@@ -474,21 +373,6 @@ async function addWatch() {
   await loadAll();
 }
 
-function renderTradingChecklists() {
-  [["gunluk", "trading-daily"], ["haftasonu", "trading-weekend"]].forEach(([kind, elId]) => {
-    const box = $(elId);
-    box.innerHTML = "";
-    state.checklistItems.filter((i) => i.kind === kind).forEach((item) => {
-      const on = state.checklistChecks.some((c) => c.item_id === item.id);
-      const row = document.createElement("div");
-      row.className = "item" + (on ? " done" : "");
-      row.innerHTML = `<button class="check ${on ? "on" : ""}">✓</button><div class="grow"><div class="title">${esc(item.label)}</div></div>`;
-      row.querySelector(".check").addEventListener("click", () => toggleChecklist(item.id, on));
-      box.appendChild(row);
-    });
-  });
-}
-
 /* ---------------- İçerik ---------------- */
 
 function renderContent() {
@@ -573,22 +457,6 @@ async function addContent() {
 }
 
 /* ---------------- Gelişim ---------------- */
-
-function renderHabitHistory() {
-  const box = $("habit-history");
-  box.innerHTML = state.habits.length ? "" : '<p class="empty">Alışkanlık yok — ekle.</p>';
-  state.habits.forEach((h) => box.appendChild(habitWeekRow(h, { removable: true })));
-}
-
-$("add-habit-btn").addEventListener("click", addHabit);
-$("new-habit-name").addEventListener("keydown", (e) => { if (e.key === "Enter") addHabit(); });
-async function addHabit() {
-  const name = $("new-habit-name").value.trim();
-  if (!name) return;
-  await db.from("bos_habits").insert({ name, sort: state.habits.length + 1 });
-  $("new-habit-name").value = "";
-  await loadAll();
-}
 
 function renderGoals() {
   const box = $("goals-list");
