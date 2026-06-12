@@ -7,19 +7,13 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  tasks: [], projects: [], skills: [], ideas: [], content: [],
+  tasks: [], content: [],
 };
 
 const AREA_LABELS = {
   genel: "Genel", proje: "Proje", ai: "AI",
   trading: "Trading", icerik: "İçerik", gelisim: "Gelişim",
 };
-const STATUS_LABELS = { aktif: "Aktif", beklemede: "Beklemede", tamamlandi: "Tamamlandı" };
-const SKILL_STATUS_LABELS = {
-  guncel: "Güncel", yuklenecek: "Web'e yüklenecek",
-  "guncelleme-bekliyor": "Güncelleme bekliyor", arsiv: "Arşiv",
-};
-const IDEA_KIND_LABELS = { skill: "Skill", icerik: "İçerik", ogrenme: "Öğrenme", genel: "Genel" };
 const CHANNEL_LABELS = { skool: "Skool", twitter: "Twitter", youtube: "YouTube" };
 const CONTENT_STATUS_LABELS = { fikir: "Fikir", taslak: "Taslak", hazir: "Hazır", yayinlandi: "Yayınlandı" };
 const CONTENT_STATUS_ORDER = ["fikir", "taslak", "hazir", "yayinlandi"];
@@ -83,17 +77,11 @@ async function login() {
 
 async function loadAll() {
   const t = todayStr();
-  const [tasks, projects, skills, ideas, content] = await Promise.all([
+  const [tasks, content] = await Promise.all([
     db.from("bos_tasks").select("*").order("done").order("due_date", { ascending: true, nullsFirst: false }).order("created_at"),
-    db.from("bos_projects").select("*").order("sort"),
-    db.from("bos_skills").select("*").order("name"),
-    db.from("bos_ideas").select("*").neq("status", "yapildi").order("created_at", { ascending: false }),
     db.from("bos_content").select("*").order("publish_date", { ascending: true, nullsFirst: false }).order("created_at"),
   ]);
   state.tasks = tasks.data ?? [];
-  state.projects = projects.data ?? [];
-  state.skills = skills.data ?? [];
-  state.ideas = ideas.data ?? [];
   state.content = content.data ?? [];
   renderAll();
 }
@@ -101,9 +89,6 @@ async function loadAll() {
 function renderAll() {
   renderToday();
   renderTasks();
-  renderProjects();
-  renderSkills();
-  renderIdeas();
   renderContent();
 }
 
@@ -179,11 +164,9 @@ function taskRow(task, compact = false) {
   const t = todayStr();
   const row = document.createElement("div");
   row.className = "item" + (task.done ? " done" : "");
-  const proj = state.projects.find((p) => p.id === task.project_id);
   const late = !task.done && task.due_date && task.due_date < t;
   const parts = [];
   if (task.area && task.area !== "genel") parts.push(AREA_LABELS[task.area] ?? task.area);
-  if (proj) parts.push(proj.name);
   const dueBadge = task.due_date
     ? `<span class="badge ${late ? "late" : ""}">${late ? "Gecikti · " : ""}${fmtDate(task.due_date)}</span>` : "";
   row.innerHTML = `
@@ -237,78 +220,6 @@ async function addTask() {
   });
   $("new-task-title").value = "";
   $("new-task-due").value = "";
-  await loadAll();
-}
-
-/* ---------------- Projeler & AI ---------------- */
-
-function renderProjects() {
-  const box = $("projects-list");
-  box.innerHTML = "";
-  state.projects.forEach((p) => {
-    const el = document.createElement("div");
-    el.className = "project";
-    el.innerHTML = `
-      <div class="row1">
-        <div class="name">${esc(p.name)}</div>
-        <select data-id="${p.id}">
-          ${Object.entries(STATUS_LABELS).map(([v, l]) =>
-            `<option value="${v}" ${p.status === v ? "selected" : ""}>${l}</option>`).join("")}
-        </select>
-      </div>
-      ${p.description ? `<div class="desc">${esc(p.description)}</div>` : ""}
-      ${p.next_step ? `<div class="next">→ ${esc(p.next_step)}</div>` : ""}`;
-    el.querySelector("select").addEventListener("change", async (e) => {
-      await db.from("bos_projects").update({ status: e.target.value, updated_at: new Date().toISOString() }).eq("id", p.id);
-      await loadAll();
-    });
-    box.appendChild(el);
-  });
-}
-
-function renderSkills() {
-  const box = $("skills-list");
-  box.innerHTML = "";
-  state.skills.forEach((s) => {
-    const row = document.createElement("div");
-    row.className = "item";
-    row.innerHTML = `
-      <div class="grow">
-        <div class="title">${esc(s.name)} ${s.version ? `<span class="muted">${esc(s.version)}</span>` : ""}</div>
-        ${s.notes ? `<div class="sub">${esc(s.notes)}</div>` : ""}
-      </div>
-      <span class="badge ${s.status}">${SKILL_STATUS_LABELS[s.status] ?? s.status}</span>`;
-    box.appendChild(row);
-  });
-}
-
-function renderIdeas() {
-  const box = $("ideas-list");
-  box.innerHTML = state.ideas.length ? "" : '<p class="empty">Havuz boş — aklına gelen fikri buraya at.</p>';
-  state.ideas.forEach((idea) => {
-    const row = document.createElement("div");
-    row.className = "item";
-    row.innerHTML = `
-      <div class="grow">
-        <div class="title">${esc(idea.text)}</div>
-        <div class="sub">${IDEA_KIND_LABELS[idea.kind] ?? idea.kind}${idea.related ? " · " + esc(idea.related) : ""}</div>
-      </div>
-      <button class="del-btn" title="Tamamlandı işaretle">✓</button>`;
-    row.querySelector(".del-btn").addEventListener("click", async () => {
-      await db.from("bos_ideas").update({ status: "yapildi" }).eq("id", idea.id);
-      await loadAll();
-    });
-    box.appendChild(row);
-  });
-}
-
-$("add-idea-btn").addEventListener("click", addIdea);
-$("new-idea-text").addEventListener("keydown", (e) => { if (e.key === "Enter") addIdea(); });
-async function addIdea() {
-  const text = $("new-idea-text").value.trim();
-  if (!text) return;
-  await db.from("bos_ideas").insert({ text, kind: $("new-idea-kind").value });
-  $("new-idea-text").value = "";
   await loadAll();
 }
 

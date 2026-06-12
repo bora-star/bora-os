@@ -10,7 +10,7 @@
 <title>Bora OS</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0d10'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='%233da5ff' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -33,7 +33,6 @@
     <nav id="top-nav" class="top-nav">
       <button data-tab="bugun" class="active">Bugün</button>
       <button data-tab="gorevler">Görevler</button>
-      <button data-tab="projeler">Projeler &amp; AI</button>
       <button data-tab="icerik">İçerik</button>
     </nav>
     <button id="settings-btn" class="icon-btn" title="Ayarlar">⚙︎</button>
@@ -84,35 +83,6 @@
       </div>
     </section>
 
-    <!-- PROJELER & AI -->
-    <section id="tab-projeler" class="tab hidden">
-      <h1>Projeler &amp; AI</h1>
-
-      <div class="card ac-cyan">
-        <h2>🧩 Projeler</h2>
-        <div id="projects-list"></div>
-      </div>
-
-      <div class="card ac-cyan">
-        <h2>🤖 Skill envanteri</h2>
-        <div id="skills-list"></div>
-      </div>
-
-      <div class="card ac-cyan">
-        <h2>💡 Fikir havuzu</h2>
-        <div class="add-row">
-          <input id="new-idea-text" type="text" placeholder="Yeni fikir...">
-          <select id="new-idea-kind">
-            <option value="skill">Skill</option>
-            <option value="icerik">İçerik</option>
-            <option value="ogrenme">Öğrenme</option>
-            <option value="genel">Genel</option>
-          </select>
-          <button id="add-idea-btn" class="btn-primary">Ekle</button>
-        </div>
-        <div id="ideas-list"></div>
-      </div>
-    </section>
     <!-- İÇERİK -->
     <section id="tab-icerik" class="tab hidden">
       <h1>İçerik</h1>
@@ -142,7 +112,6 @@
   <nav id="bottom-nav" class="bottom-nav">
     <button data-tab="bugun" class="active"><span>☀️</span>Bugün</button>
     <button data-tab="gorevler"><span>✓</span>Görevler</button>
-    <button data-tab="projeler"><span>🧩</span>Projeler</button>
     <button data-tab="icerik"><span>✍️</span>İçerik</button>
   </nav>
 
@@ -161,6 +130,6 @@
   </div>
 </div>
 
-<script type="module" src="app.js?v=4"></script>
+<script type="module" src="app.js?v=5"></script>
 </body>
 </html>
