@@ -399,6 +399,27 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 
 .empty { color: var(--muted); font-size: 14px; padding: 8px 4px; }
 
+/* ---------- Kategori grupları ---------- */
+.cat-group { margin-bottom: 4px; }
+.cat-header {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cat-sel {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
 /* ---------- Trading ---------- */
 .badge.izlemede { color: var(--amber); }
 .badge.tetiklendi { color: var(--green); }

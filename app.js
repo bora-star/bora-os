@@ -7,12 +7,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  tasks: [],
-};
-
-const AREA_LABELS = {
-  genel: "Genel", proje: "Proje", ai: "AI",
-  trading: "Trading", icerik: "İçerik", gelisim: "Gelişim",
+  tasks: [], categories: [],
 };
 
 function dateStr(d) {
@@ -21,11 +16,8 @@ function dateStr(d) {
 function todayStr() {
   return dateStr(new Date());
 }
-function fmtDate(s) {
-  if (!s) return "";
-  const [y, m, d] = s.split("-");
-  const aylar = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
-  return `${parseInt(d)} ${aylar[parseInt(m) - 1]}`;
+function localDateOf(ts) {
+  return dateStr(new Date(ts));
 }
 function esc(s) {
   const div = document.createElement("div");
@@ -73,85 +65,147 @@ async function login() {
 /* ---------------- Veri ---------------- */
 
 async function loadAll() {
-  const t = todayStr();
-  const [tasks] = await Promise.all([
-    db.from("bos_tasks").select("*").order("done").order("due_date", { ascending: true, nullsFirst: false }).order("created_at"),
+  const [tasks, categories] = await Promise.all([
+    db.from("bos_tasks").select("*").order("done").order("created_at"),
+    db.from("bos_categories").select("*").order("sort"),
   ]);
   state.tasks = tasks.data ?? [];
+  state.categories = categories.data ?? [];
   renderAll();
 }
 
 function renderAll() {
+  populateCategorySelect();
   renderToday();
   renderTasks();
+  renderCategories();
+}
+
+/* ---------------- Kategoriler ---------------- */
+
+function catName(area) {
+  if (!area) return "Belirsiz";
+  const cat = state.categories.find((c) => c.name === area);
+  return cat ? cat.name : area;
+}
+
+function populateCategorySelect() {
+  const sel = $("new-task-area");
+  const prev = sel.value;
+  sel.innerHTML = "";
+  const belirsiz = document.createElement("option");
+  belirsiz.value = "";
+  belirsiz.textContent = "Belirsiz";
+  sel.appendChild(belirsiz);
+  state.categories.forEach((cat) => {
+    const opt = document.createElement("option");
+    opt.value = cat.name;
+    opt.textContent = cat.name;
+    sel.appendChild(opt);
+  });
+  if (prev) sel.value = prev;
+}
+
+function renderCategories() {
+  const box = $("categories-list");
+  box.innerHTML = "";
+  if (state.categories.length === 0) {
+    box.innerHTML = '<p class="empty">Henüz kategori yok.</p>';
+    return;
+  }
+  state.categories.forEach((cat) => {
+    const row = document.createElement("div");
+    row.className = "item";
+    row.innerHTML = `
+      <div class="grow"><div class="title">${esc(cat.name)}</div></div>
+      <button class="del-btn" title="Sil">✕</button>`;
+    row.querySelector(".del-btn").addEventListener("click", async () => {
+      if (confirm(`"${cat.name}" kategorisi silinsin mi?`)) {
+        await db.from("bos_categories").delete().eq("id", cat.id);
+        await loadAll();
+      }
+    });
+    box.appendChild(row);
+  });
+}
+
+$("add-cat-btn").addEventListener("click", addCategory);
+$("new-cat-name").addEventListener("keydown", (e) => { if (e.key === "Enter") addCategory(); });
+async function addCategory() {
+  const name = $("new-cat-name").value.trim();
+  if (!name) return;
+  const maxSort = state.categories.reduce((m, c) => Math.max(m, c.sort ?? 0), 0);
+  await db.from("bos_categories").insert({ name, sort: maxSort + 10 });
+  $("new-cat-name").value = "";
+  await loadAll();
 }
 
 /* ---------------- Bugün ---------------- */
 
-function localDateOf(ts) {
-  return dateStr(new Date(ts));
-}
-
 function renderToday() {
   const t = todayStr();
   const box = $("today-tasks");
-  const todays = state.tasks.filter((x) => !x.done && x.due_date && x.due_date <= t);
-  const noDate = state.tasks.filter((x) => !x.done && !x.due_date);
+  const open = state.tasks.filter((x) => !x.done);
   const doneToday = state.tasks.filter((x) => x.done && x.done_at && localDateOf(x.done_at) === t);
   box.innerHTML = "";
-  if (todays.length === 0 && noDate.length === 0) {
-    box.innerHTML = '<p class="empty">Bugün için görev yok. 👌</p>';
+  if (open.length === 0) {
+    box.innerHTML = '<p class="empty">Açık görev yok. 👌</p>';
   } else {
-    todays.forEach((task) => box.appendChild(taskRow(task, true)));
-    if (todays.length === 0) {
-      box.innerHTML = '<p class="empty">Bugüne tarihli görev yok — açık görevlerden seçebilirsin:</p>';
-      noDate.slice(0, 4).forEach((task) => box.appendChild(taskRow(task, true)));
-    }
+    open.slice(0, 6).forEach((task) => box.appendChild(taskRow(task, true)));
   }
 
-  // Görev sayacı + ilerleme barı
-  const shown = todays.length || Math.min(noDate.length, 4);
-  $("today-task-cnt").textContent = shown ? `${shown} açık` : "";
-  const totalToday = doneToday.length + todays.length;
+  const shown = Math.min(open.length, 6);
+  $("today-task-cnt").textContent = open.length ? `${open.length} açık` : "";
+
+  const total = doneToday.length + open.length;
   const barWrap = $("today-task-bar-wrap");
-  if (totalToday > 0) {
+  if (doneToday.length > 0) {
     barWrap.classList.remove("hidden");
-    $("today-task-bar").style.width = `${Math.round((doneToday.length / totalToday) * 100)}%`;
+    $("today-task-bar").style.width = `${Math.round((doneToday.length / total) * 100)}%`;
   } else {
     barWrap.classList.add("hidden");
   }
 
   $("today-stats").innerHTML = `
-    <div class="stat ac-blue"><div class="n">${doneToday.length}/${totalToday || doneToday.length}</div><div class="l">GÖREV</div></div>`;
+    <div class="stat ac-blue"><div class="n">${doneToday.length}/${total || doneToday.length}</div><div class="l">GÖREV</div></div>`;
 }
 
 /* ---------------- Görevler ---------------- */
 
 function taskRow(task, compact = false) {
-  const t = todayStr();
   const row = document.createElement("div");
   row.className = "item" + (task.done ? " done" : "");
-  const late = !task.done && task.due_date && task.due_date < t;
-  const parts = [];
-  if (task.area && task.area !== "genel") parts.push(AREA_LABELS[task.area] ?? task.area);
-  const dueBadge = task.due_date
-    ? `<span class="badge ${late ? "late" : ""}">${late ? "Gecikti · " : ""}${fmtDate(task.due_date)}</span>` : "";
+
+  const catOptions = ['<option value="">Belirsiz</option>',
+    ...state.categories.map((c) =>
+      `<option value="${esc(c.name)}" ${task.area === c.name ? "selected" : ""}>${esc(c.name)}</option>`)
+  ].join("");
+
   row.innerHTML = `
     <button class="check ${task.done ? "on" : ""}">✓</button>
     <div class="grow">
       <div class="title">${esc(task.title)}</div>
-      ${parts.length ? `<div class="sub">${esc(parts.join(" · "))}</div>` : ""}
     </div>
-    ${dueBadge}
-    ${compact ? "" : '<button class="del-btn" title="Sil">✕</button>'}`;
+    ${compact ? `<span class="badge">${esc(catName(task.area))}</span>` :
+      `<select class="cat-sel">${catOptions}</select>
+       <button class="del-btn" title="Sil">✕</button>`}`;
+
   row.querySelector(".check").addEventListener("click", () => toggleTask(task));
-  const del = row.querySelector(".del-btn");
-  if (del) del.addEventListener("click", async () => {
-    if (confirm("Görev silinsin mi?")) {
-      await db.from("bos_tasks").delete().eq("id", task.id);
+
+  if (!compact) {
+    const sel = row.querySelector(".cat-sel");
+    sel.addEventListener("change", async () => {
+      await db.from("bos_tasks").update({ area: sel.value || null }).eq("id", task.id);
       await loadAll();
-    }
-  });
+    });
+    row.querySelector(".del-btn").addEventListener("click", async () => {
+      if (confirm("Görev silinsin mi?")) {
+        await db.from("bos_tasks").delete().eq("id", task.id);
+        await loadAll();
+      }
+    });
+  }
+
   return row;
 }
 
@@ -159,8 +213,31 @@ function renderTasks() {
   const open = state.tasks.filter((x) => !x.done);
   const done = state.tasks.filter((x) => x.done).sort((a, b) => (b.done_at ?? "").localeCompare(a.done_at ?? ""));
   const ob = $("open-tasks");
-  ob.innerHTML = open.length ? "" : '<p class="empty">Açık görev yok.</p>';
-  open.forEach((task) => ob.appendChild(taskRow(task)));
+  ob.innerHTML = "";
+
+  if (open.length === 0) {
+    ob.innerHTML = '<p class="empty">Açık görev yok.</p>';
+  } else {
+    // Group by category
+    const groups = new Map();
+    groups.set("Belirsiz", []);
+    state.categories.forEach((c) => groups.set(c.name, []));
+
+    open.forEach((task) => {
+      const key = task.area && groups.has(task.area) ? task.area : "Belirsiz";
+      groups.get(key).push(task);
+    });
+
+    groups.forEach((tasks, name) => {
+      if (tasks.length === 0) return;
+      const grp = document.createElement("div");
+      grp.className = "cat-group";
+      grp.innerHTML = `<div class="cat-header">${esc(name)} <span class="muted">${tasks.length}</span></div>`;
+      tasks.forEach((task) => grp.appendChild(taskRow(task)));
+      ob.appendChild(grp);
+    });
+  }
+
   const dbx = $("done-tasks");
   dbx.innerHTML = done.length ? "" : '<p class="empty">Henüz yok.</p>';
   done.slice(0, 15).forEach((task) => dbx.appendChild(taskRow(task)));
@@ -182,11 +259,9 @@ async function addTask() {
   if (!title) return;
   await db.from("bos_tasks").insert({
     title,
-    area: $("new-task-area").value,
-    due_date: $("new-task-due").value || null,
+    area: $("new-task-area").value || null,
   });
   $("new-task-title").value = "";
-  $("new-task-due").value = "";
   await loadAll();
 }
 
