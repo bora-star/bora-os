@@ -7,8 +7,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  tasks: [], projects: [], skills: [], ideas: [],
-  watchlist: [], content: [], goals: [], journal: [],
+  tasks: [], projects: [], skills: [], ideas: [], content: [],
 };
 
 const AREA_LABELS = {
@@ -21,11 +20,9 @@ const SKILL_STATUS_LABELS = {
   "guncelleme-bekliyor": "Güncelleme bekliyor", arsiv: "Arşiv",
 };
 const IDEA_KIND_LABELS = { skill: "Skill", icerik: "İçerik", ogrenme: "Öğrenme", genel: "Genel" };
-const WATCH_STATUS_LABELS = { izlemede: "İzlemede", tetiklendi: "Tetiklendi", cikti: "Çıktı" };
 const CHANNEL_LABELS = { skool: "Skool", twitter: "Twitter", youtube: "YouTube" };
 const CONTENT_STATUS_LABELS = { fikir: "Fikir", taslak: "Taslak", hazir: "Hazır", yayinlandi: "Yayınlandı" };
 const CONTENT_STATUS_ORDER = ["fikir", "taslak", "hazir", "yayinlandi"];
-const HORIZON_LABELS = { "3ay": "3 ay", "6ay": "6 ay", "12ay": "12 ay" };
 
 function dateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -86,24 +83,18 @@ async function login() {
 
 async function loadAll() {
   const t = todayStr();
-  const [tasks, projects, skills, ideas, watchlist, content, goals, journal] = await Promise.all([
+  const [tasks, projects, skills, ideas, content] = await Promise.all([
     db.from("bos_tasks").select("*").order("done").order("due_date", { ascending: true, nullsFirst: false }).order("created_at"),
     db.from("bos_projects").select("*").order("sort"),
     db.from("bos_skills").select("*").order("name"),
     db.from("bos_ideas").select("*").neq("status", "yapildi").order("created_at", { ascending: false }),
-    db.from("bos_watchlist").select("*").neq("status", "cikti").order("created_at"),
     db.from("bos_content").select("*").order("publish_date", { ascending: true, nullsFirst: false }).order("created_at"),
-    db.from("bos_goals").select("*").order("created_at"),
-    db.from("bos_journal").select("*").order("date", { ascending: false }).order("created_at", { ascending: false }).limit(10),
   ]);
   state.tasks = tasks.data ?? [];
   state.projects = projects.data ?? [];
   state.skills = skills.data ?? [];
   state.ideas = ideas.data ?? [];
-  state.watchlist = watchlist.data ?? [];
   state.content = content.data ?? [];
-  state.goals = goals.data ?? [];
-  state.journal = journal.data ?? [];
   renderAll();
 }
 
@@ -113,10 +104,7 @@ function renderAll() {
   renderProjects();
   renderSkills();
   renderIdeas();
-  renderWatchlist();
   renderContent();
-  renderGoals();
-  renderJournal();
 }
 
 /* ---------------- Bugün ---------------- */
@@ -324,55 +312,6 @@ async function addIdea() {
   await loadAll();
 }
 
-/* ---------------- Trading ---------------- */
-
-function renderWatchlist() {
-  const box = $("watchlist");
-  box.innerHTML = state.watchlist.length ? "" : '<p class="empty">İzleme listesi boş.</p>';
-  state.watchlist.forEach((w) => {
-    const row = document.createElement("div");
-    row.className = "item";
-    const subParts = [w.reason, w.level ? "Seviye: " + w.level : null].filter(Boolean);
-    row.innerHTML = `
-      <div class="grow">
-        <div class="title ticker">${esc(w.ticker)}</div>
-        ${subParts.length ? `<div class="sub">${esc(subParts.join(" · "))}</div>` : ""}
-      </div>
-      <select>
-        ${Object.entries(WATCH_STATUS_LABELS).map(([v, l]) =>
-          `<option value="${v}" ${w.status === v ? "selected" : ""}>${l}</option>`).join("")}
-      </select>
-      <button class="del-btn" title="Sil">✕</button>`;
-    row.querySelector("select").addEventListener("change", async (e) => {
-      await db.from("bos_watchlist").update({ status: e.target.value }).eq("id", w.id);
-      await loadAll();
-    });
-    row.querySelector(".del-btn").addEventListener("click", async () => {
-      if (confirm(w.ticker + " listeden silinsin mi?")) {
-        await db.from("bos_watchlist").delete().eq("id", w.id);
-        await loadAll();
-      }
-    });
-    box.appendChild(row);
-  });
-}
-
-$("add-watch-btn").addEventListener("click", addWatch);
-$("new-watch-level").addEventListener("keydown", (e) => { if (e.key === "Enter") addWatch(); });
-async function addWatch() {
-  const ticker = $("new-watch-ticker").value.trim().toUpperCase();
-  if (!ticker) return;
-  await db.from("bos_watchlist").insert({
-    ticker,
-    reason: $("new-watch-reason").value.trim() || null,
-    level: $("new-watch-level").value.trim() || null,
-  });
-  $("new-watch-ticker").value = "";
-  $("new-watch-reason").value = "";
-  $("new-watch-level").value = "";
-  await loadAll();
-}
-
 /* ---------------- İçerik ---------------- */
 
 function renderContent() {
@@ -455,76 +394,6 @@ async function addContent() {
   $("new-content-date").value = "";
   await loadAll();
 }
-
-/* ---------------- Gelişim ---------------- */
-
-function renderGoals() {
-  const box = $("goals-list");
-  const goals = [...state.goals].sort((a, b) => (a.status === "tamam") - (b.status === "tamam"));
-  box.innerHTML = goals.length ? "" : '<p class="empty">Hedef yok — 3-6-12 aylık hedeflerini ekle.</p>';
-  goals.forEach((g) => {
-    const row = document.createElement("div");
-    row.className = "goal-row" + (g.status === "tamam" ? " tamam" : "");
-    row.innerHTML = `
-      <div class="row1">
-        <div class="title">${esc(g.title)}</div>
-        <span class="badge">${HORIZON_LABELS[g.horizon] ?? g.horizon}</span>
-        ${g.status === "tamam"
-          ? '<button class="mini-btn reopen">Geri aç</button>'
-          : `<button class="mini-btn minus">−10</button>
-             <button class="mini-btn plus">+10</button>`}
-        <button class="del-btn" title="Sil">✕</button>
-      </div>
-      <div class="bar"><div style="width:${g.progress}%"></div></div>`;
-    const setProgress = async (p) => {
-      p = Math.max(0, Math.min(100, p));
-      await db.from("bos_goals").update({ progress: p, status: p >= 100 ? "tamam" : "aktif" }).eq("id", g.id);
-      await loadAll();
-    };
-    const plus = row.querySelector(".plus");
-    if (plus) plus.addEventListener("click", () => setProgress(g.progress + 10));
-    const minus = row.querySelector(".minus");
-    if (minus) minus.addEventListener("click", () => setProgress(g.progress - 10));
-    const reopen = row.querySelector(".reopen");
-    if (reopen) reopen.addEventListener("click", () => setProgress(90));
-    row.querySelector(".del-btn").addEventListener("click", async () => {
-      if (confirm("Hedef silinsin mi?")) {
-        await db.from("bos_goals").delete().eq("id", g.id);
-        await loadAll();
-      }
-    });
-    box.appendChild(row);
-  });
-}
-
-$("add-goal-btn").addEventListener("click", addGoal);
-$("new-goal-title").addEventListener("keydown", (e) => { if (e.key === "Enter") addGoal(); });
-async function addGoal() {
-  const title = $("new-goal-title").value.trim();
-  if (!title) return;
-  await db.from("bos_goals").insert({ title, horizon: $("new-goal-horizon").value });
-  $("new-goal-title").value = "";
-  await loadAll();
-}
-
-function renderJournal() {
-  const box = $("journal-list");
-  box.innerHTML = state.journal.length ? "" : "";
-  state.journal.forEach((j) => {
-    const row = document.createElement("div");
-    row.className = "journal-entry";
-    row.innerHTML = `<div class="date2">${fmtDate(j.date)}</div><div class="text">${esc(j.text)}</div>`;
-    box.appendChild(row);
-  });
-}
-
-$("save-journal-btn").addEventListener("click", async () => {
-  const text = $("journal-text").value.trim();
-  if (!text) return;
-  await db.from("bos_journal").insert({ text, date: todayStr() });
-  $("journal-text").value = "";
-  await loadAll();
-});
 
 /* ---------------- Sekmeler ---------------- */
 
