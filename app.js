@@ -135,7 +135,8 @@ async function addCategory() {
   const name = $("new-cat-name").value.trim();
   if (!name) return;
   const maxSort = state.categories.reduce((m, c) => Math.max(m, c.sort ?? 0), 0);
-  await db.from("bos_categories").insert({ name, sort: maxSort + 10 });
+  const { error } = await db.from("bos_categories").insert({ name, sort: maxSort + 10 });
+  if (error) { alert("Hata: " + error.message); return; }
   $("new-cat-name").value = "";
   await loadAll();
 }
