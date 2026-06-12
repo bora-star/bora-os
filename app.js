@@ -7,16 +7,13 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
 const state = {
-  tasks: [], content: [],
+  tasks: [],
 };
 
 const AREA_LABELS = {
   genel: "Genel", proje: "Proje", ai: "AI",
   trading: "Trading", icerik: "İçerik", gelisim: "Gelişim",
 };
-const CHANNEL_LABELS = { skool: "Skool", twitter: "Twitter", youtube: "YouTube" };
-const CONTENT_STATUS_LABELS = { fikir: "Fikir", taslak: "Taslak", hazir: "Hazır", yayinlandi: "Yayınlandı" };
-const CONTENT_STATUS_ORDER = ["fikir", "taslak", "hazir", "yayinlandi"];
 
 function dateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -77,19 +74,16 @@ async function login() {
 
 async function loadAll() {
   const t = todayStr();
-  const [tasks, content] = await Promise.all([
+  const [tasks] = await Promise.all([
     db.from("bos_tasks").select("*").order("done").order("due_date", { ascending: true, nullsFirst: false }).order("created_at"),
-    db.from("bos_content").select("*").order("publish_date", { ascending: true, nullsFirst: false }).order("created_at"),
   ]);
   state.tasks = tasks.data ?? [];
-  state.content = content.data ?? [];
   renderAll();
 }
 
 function renderAll() {
   renderToday();
   renderTasks();
-  renderContent();
 }
 
 /* ---------------- Bugün ---------------- */
@@ -127,35 +121,8 @@ function renderToday() {
     barWrap.classList.add("hidden");
   }
 
-  // İstatistik şeridi
-  const contentDue = state.content.filter((c) => c.status !== "yayinlandi" && c.publish_date && c.publish_date <= t);
   $("today-stats").innerHTML = `
-    <div class="stat ac-blue"><div class="n">${doneToday.length}/${totalToday || doneToday.length}</div><div class="l">GÖREV</div></div>
-    <div class="stat ac-purple"><div class="n">${contentDue.length}</div><div class="l">YAYIN</div></div>`;
-
-  // Bugün yayınlanacak içerik
-  const dueContent = state.content.filter((c) => c.status !== "yayinlandi" && c.publish_date && c.publish_date <= t);
-  const card = $("today-content-card");
-  if (dueContent.length === 0) {
-    card.classList.add("hidden");
-  } else {
-    card.classList.remove("hidden");
-    const box = $("today-content");
-    box.innerHTML = "";
-    dueContent.forEach((c) => {
-      const late = c.publish_date < t;
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div class="grow">
-          <div class="title">${esc(c.title)}</div>
-          <div class="sub">${CONTENT_STATUS_LABELS[c.status] ?? c.status}</div>
-        </div>
-        <span class="badge ${c.channel}">${CHANNEL_LABELS[c.channel] ?? c.channel}</span>
-        ${late ? '<span class="badge late">Gecikti</span>' : ""}`;
-      box.appendChild(row);
-    });
-  }
+    <div class="stat ac-blue"><div class="n">${doneToday.length}/${totalToday || doneToday.length}</div><div class="l">GÖREV</div></div>`;
 }
 
 /* ---------------- Görevler ---------------- */
@@ -220,89 +187,6 @@ async function addTask() {
   });
   $("new-task-title").value = "";
   $("new-task-due").value = "";
-  await loadAll();
-}
-
-/* ---------------- İçerik ---------------- */
-
-function renderContent() {
-  const t = todayStr();
-
-  // Yayın takvimi: tarihi olan, yayınlanmamış içerikler
-  const cal = $("content-calendar");
-  const upcoming = state.content.filter((c) => c.status !== "yayinlandi" && c.publish_date);
-  cal.innerHTML = upcoming.length ? "" : '<p class="empty">Takvimde içerik yok — tarih vererek ekle.</p>';
-  upcoming.forEach((c) => {
-    const late = c.publish_date < t;
-    const row = document.createElement("div");
-    row.className = "item";
-    row.innerHTML = `
-      <span class="badge ${late ? "late" : ""}">${late ? "Gecikti · " : ""}${fmtDate(c.publish_date)}</span>
-      <div class="grow"><div class="title">${esc(c.title)}</div></div>
-      <span class="badge ${c.channel}">${CHANNEL_LABELS[c.channel] ?? c.channel}</span>`;
-    cal.appendChild(row);
-  });
-
-  // Üretim hattı
-  const pipe = $("content-pipeline");
-  pipe.innerHTML = "";
-  CONTENT_STATUS_ORDER.forEach((status) => {
-    const items = state.content.filter((c) => c.status === status);
-    if (status === "yayinlandi" && items.length === 0) return;
-    const card = document.createElement("div");
-    card.className = "card pipeline-group ac-purple";
-    card.innerHTML = `<h2>${CONTENT_STATUS_LABELS[status]} <span class="cnt">${items.length}</span></h2>`;
-    if (!items.length) {
-      card.insertAdjacentHTML("beforeend", '<p class="empty">Boş.</p>');
-    }
-    items.slice(0, status === "yayinlandi" ? 10 : 100).forEach((c) => {
-      const idx = CONTENT_STATUS_ORDER.indexOf(c.status);
-      const row = document.createElement("div");
-      row.className = "item";
-      row.innerHTML = `
-        <div class="grow">
-          <div class="title">${esc(c.title)}</div>
-          ${c.publish_date ? `<div class="sub">Yayın: ${fmtDate(c.publish_date)}</div>` : ""}
-        </div>
-        <span class="badge ${c.channel}">${CHANNEL_LABELS[c.channel] ?? c.channel}</span>
-        ${idx > 0 ? '<button class="move-btn back" title="Geri al">←</button>' : ""}
-        ${idx < 3 ? '<button class="move-btn fwd" title="İlerlet">→</button>' : ""}
-        <button class="del-btn" title="Sil">✕</button>`;
-      const move = async (dir) => {
-        await db.from("bos_content").update({
-          status: CONTENT_STATUS_ORDER[idx + dir],
-          updated_at: new Date().toISOString(),
-        }).eq("id", c.id);
-        await loadAll();
-      };
-      const back = row.querySelector(".back");
-      if (back) back.addEventListener("click", () => move(-1));
-      const fwd = row.querySelector(".fwd");
-      if (fwd) fwd.addEventListener("click", () => move(1));
-      row.querySelector(".del-btn").addEventListener("click", async () => {
-        if (confirm("İçerik silinsin mi?")) {
-          await db.from("bos_content").delete().eq("id", c.id);
-          await loadAll();
-        }
-      });
-      card.appendChild(row);
-    });
-    pipe.appendChild(card);
-  });
-}
-
-$("add-content-btn").addEventListener("click", addContent);
-$("new-content-title").addEventListener("keydown", (e) => { if (e.key === "Enter") addContent(); });
-async function addContent() {
-  const title = $("new-content-title").value.trim();
-  if (!title) return;
-  await db.from("bos_content").insert({
-    title,
-    channel: $("new-content-channel").value,
-    publish_date: $("new-content-date").value || null,
-  });
-  $("new-content-title").value = "";
-  $("new-content-date").value = "";
   await loadAll();
 }
 

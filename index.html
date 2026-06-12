@@ -10,7 +10,7 @@
 <title>Bora OS</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b0d10'/%3E%3Ctext x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='%233da5ff' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -33,7 +33,6 @@
     <nav id="top-nav" class="top-nav">
       <button data-tab="bugun" class="active">Bugün</button>
       <button data-tab="gorevler">Görevler</button>
-      <button data-tab="icerik">İçerik</button>
     </nav>
     <button id="settings-btn" class="icon-btn" title="Ayarlar">⚙︎</button>
   </header>
@@ -52,11 +51,6 @@
         <div class="bar hidden" id="today-task-bar-wrap"><div id="today-task-bar"></div></div>
       </div>
 
-      <div class="card ac-purple hidden" id="today-content-card">
-        <h2>✍️ Bugün yayın</h2>
-        <div id="today-content"></div>
-      </div>
-
     </section>
 
     <!-- GÖREVLER -->
@@ -68,7 +62,6 @@
           <option value="genel">Genel</option>
           <option value="proje">Proje</option>
           <option value="ai">AI</option>
-          <option value="icerik">İçerik</option>
         </select>
         <input id="new-task-due" type="date" title="Tarih (isteğe bağlı)">
         <button id="add-task-btn" class="btn-primary">Ekle</button>
@@ -83,36 +76,12 @@
       </div>
     </section>
 
-    <!-- İÇERİK -->
-    <section id="tab-icerik" class="tab hidden">
-      <h1>İçerik</h1>
-
-      <div class="add-row">
-        <input id="new-content-title" type="text" placeholder="Yeni içerik fikri...">
-        <select id="new-content-channel">
-          <option value="skool">Skool</option>
-          <option value="twitter">Twitter</option>
-          <option value="youtube">YouTube</option>
-        </select>
-        <input id="new-content-date" type="date" title="Yayın tarihi (isteğe bağlı)">
-        <button id="add-content-btn" class="btn-primary">Ekle</button>
-      </div>
-
-      <div class="card ac-purple">
-        <h2>📅 Yayın takvimi</h2>
-        <div id="content-calendar"></div>
-      </div>
-
-      <div id="content-pipeline"></div>
-    </section>
-
   </main>
 
   <!-- Alt sekme çubuğu (telefon) -->
   <nav id="bottom-nav" class="bottom-nav">
     <button data-tab="bugun" class="active"><span>☀️</span>Bugün</button>
     <button data-tab="gorevler"><span>✓</span>Görevler</button>
-    <button data-tab="icerik"><span>✍️</span>İçerik</button>
   </nav>
 
   <!-- Ayarlar -->
@@ -130,6 +99,6 @@
   </div>
 </div>
 
-<script type="module" src="app.js?v=5"></script>
+<script type="module" src="app.js?v=6"></script>
 </body>
 </html>
