@@ -8,6 +8,7 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (id) => document.getElementById(id);
 const state = { tasks: [], categories: [] };
 const collapsedCats = new Set();
+let sortMode = "category"; // "category" | "priority"
 
 const PRIO = {
   acil: { label: "Acil",  icon: "●", color: "var(--red)"   },
@@ -244,6 +245,35 @@ function renderTasks() {
   ob.innerHTML = "";
   if (open.length === 0) {
     ob.innerHTML = '<p class="empty">Açık görev yok.</p>';
+  } else if (sortMode === "priority") {
+    const PRIO_GROUPS = [
+      { key: "acil",  label: "🔴 Acil"  },
+      { key: "orta",  label: "🟡 Orta"  },
+      { key: "sonra", label: "⚫ Sonra" },
+      { key: null,    label: "— Önceliksiz" },
+    ];
+    PRIO_GROUPS.forEach(({ key, label }) => {
+      const tasks = open.filter((t) => (t.priority ?? null) === key);
+      if (tasks.length === 0) return;
+      const collapsed = collapsedCats.has(label);
+      const grp = document.createElement("div");
+      grp.className = "cat-group";
+      const header = document.createElement("div");
+      header.className = "cat-header";
+      header.innerHTML = `<span class="chevron">${collapsed ? "▶" : "▼"}</span> ${label} <span class="muted">${tasks.length}</span>`;
+      header.style.cursor = "pointer";
+      const body = document.createElement("div");
+      body.className = "cat-body" + (collapsed ? " hidden" : "");
+      tasks.forEach((task) => body.appendChild(taskRow(task)));
+      header.addEventListener("click", () => {
+        if (collapsedCats.has(label)) collapsedCats.delete(label);
+        else collapsedCats.add(label);
+        renderTasks();
+      });
+      grp.appendChild(header);
+      grp.appendChild(body);
+      ob.appendChild(grp);
+    });
   } else {
     const groups = new Map();
     groups.set("Belirsiz", []);
@@ -289,6 +319,12 @@ async function toggleTask(task) {
   }).eq("id", task.id);
   await loadAll();
 }
+
+$("sort-toggle").addEventListener("click", () => {
+  sortMode = sortMode === "category" ? "priority" : "category";
+  $("sort-toggle").textContent = sortMode === "category" ? "Önceliğe göre" : "Kategoriye göre";
+  renderTasks();
+});
 
 $("add-task-btn").addEventListener("click", addTask);
 $("new-task-title").addEventListener("keydown", (e) => { if (e.key === "Enter") addTask(); });
