@@ -117,8 +117,37 @@ function renderCategories() {
     const row = document.createElement("div");
     row.className = "item";
     row.innerHTML = `
-      <div class="grow"><div class="title">${esc(cat.name)}</div></div>
+      <div class="grow"><div class="title edit-title">${esc(cat.name)}</div></div>
       <button class="del-btn" title="Sil">✕</button>`;
+
+    const titleEl = row.querySelector(".edit-title");
+    titleEl.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = cat.name;
+      input.className = "title-input";
+      titleEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      async function save() {
+        const newName = input.value.trim();
+        if (newName && newName !== cat.name) {
+          await db.from("bos_categories").update({ name: newName }).eq("id", cat.id);
+          await db.from("bos_tasks").update({ area: newName }).eq("area", cat.name);
+          await loadAll();
+        } else {
+          input.replaceWith(titleEl);
+        }
+      }
+
+      input.addEventListener("blur", save);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+        if (e.key === "Escape") { input.replaceWith(titleEl); }
+      });
+    });
+
     row.querySelector(".del-btn").addEventListener("click", async () => {
       if (confirm(`"${cat.name}" kategorisi silinsin mi?`)) {
         await db.from("bos_categories").delete().eq("id", cat.id);
