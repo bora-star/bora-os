@@ -185,13 +185,41 @@ function taskRow(task, compact = false) {
   row.innerHTML = `
     <button class="check ${task.done ? "on" : ""}">✓</button>
     <div class="grow">
-      <div class="title">${esc(task.title)}</div>
+      <div class="title edit-title">${esc(task.title)}</div>
     </div>
     ${compact ? `<span class="badge">${esc(catName(task.area))}</span>` :
       `<select class="cat-sel">${catOptions}</select>
        <button class="del-btn" title="Sil">✕</button>`}`;
 
   row.querySelector(".check").addEventListener("click", () => toggleTask(task));
+
+  // Inline title editing
+  const titleEl = row.querySelector(".edit-title");
+  titleEl.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = task.title;
+    input.className = "title-input";
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    async function save() {
+      const newTitle = input.value.trim();
+      if (newTitle && newTitle !== task.title) {
+        await db.from("bos_tasks").update({ title: newTitle }).eq("id", task.id);
+        await loadAll();
+      } else {
+        input.replaceWith(titleEl);
+      }
+    }
+
+    input.addEventListener("blur", save);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+      if (e.key === "Escape") { input.replaceWith(titleEl); }
+    });
+  });
 
   if (!compact) {
     const sel = row.querySelector(".cat-sel");

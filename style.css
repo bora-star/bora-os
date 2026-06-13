@@ -277,6 +277,20 @@ h1 { font-size: 24px; margin-bottom: 16px; }
   padding: 4px 8px;
 }
 
+.edit-title { cursor: pointer; }
+.title-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--blue);
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  padding: 0;
+  border-radius: 0;
+}
+
 /* ---------- İlerleme barı ---------- */
 .bar {
   height: 8px;
