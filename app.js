@@ -199,11 +199,15 @@ function taskRow(task) {
     <select class="cat-sel">${catOptions}</select>
     <button class="del-btn" title="Sil">✕</button>`;
 
-  row.querySelector(".prio-btn").addEventListener("click", async () => {
+  row.querySelector(".prio-btn").addEventListener("click", async (e) => {
+    e.stopPropagation();
     const cur = PRIO_ORDER.indexOf(task.priority ?? null);
     const next = PRIO_ORDER[(cur + 1) % PRIO_ORDER.length];
+    task.priority = next;
+    const btn = e.currentTarget;
+    btn.style.background = next ? PRIO[next].bg : "#232830";
+    btn.title = next ? PRIO[next].label : "Öncelik yok";
     await db.from("bos_tasks").update({ priority: next }).eq("id", task.id);
-    await loadAll();
   });
 
   row.querySelector(".check").addEventListener("click", () => toggleTask(task));
