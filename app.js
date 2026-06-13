@@ -6,19 +6,8 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
-const state = {
-  tasks: [], categories: [],
-};
+const state = { tasks: [], categories: [] };
 
-function dateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-function todayStr() {
-  return dateStr(new Date());
-}
-function localDateOf(ts) {
-  return dateStr(new Date(ts));
-}
 function esc(s) {
   const div = document.createElement("div");
   div.textContent = s ?? "";
@@ -40,10 +29,6 @@ function showLogin() {
 async function showApp() {
   $("login-view").classList.add("hidden");
   $("app-view").classList.remove("hidden");
-  const gunler = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-  const aylar = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-  const n = new Date();
-  $("today-title").textContent = `${n.getDate()} ${aylar[n.getMonth()]} ${gunler[n.getDay()]}`;
   await loadAll();
 }
 
@@ -71,12 +56,7 @@ async function loadAll() {
   ]);
   state.tasks = tasks.data ?? [];
   state.categories = categories.data ?? [];
-  renderAll();
-}
-
-function renderAll() {
   populateCategorySelect();
-  renderToday();
   renderTasks();
   renderCategories();
 }
@@ -85,18 +65,13 @@ function renderAll() {
 
 function catName(area) {
   if (!area) return "Belirsiz";
-  const cat = state.categories.find((c) => c.name === area);
-  return cat ? cat.name : area;
+  return state.categories.find((c) => c.name === area)?.name ?? area;
 }
 
 function populateCategorySelect() {
   const sel = $("new-task-area");
   const prev = sel.value;
-  sel.innerHTML = "";
-  const belirsiz = document.createElement("option");
-  belirsiz.value = "";
-  belirsiz.textContent = "Belirsiz";
-  sel.appendChild(belirsiz);
+  sel.innerHTML = '<option value="">Belirsiz</option>';
   state.categories.forEach((cat) => {
     const opt = document.createElement("option");
     opt.value = cat.name;
@@ -104,6 +79,28 @@ function populateCategorySelect() {
     sel.appendChild(opt);
   });
   if (prev) sel.value = prev;
+}
+
+function makeInlineEditor(currentValue, onSave) {
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = currentValue;
+  input.className = "title-input";
+
+  let saved = false;
+  async function save() {
+    if (saved) return;
+    saved = true;
+    const newVal = input.value.trim();
+    await onSave(newVal);
+  }
+
+  input.addEventListener("blur", save);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    if (e.key === "Escape") { saved = true; input.blur(); }
+  });
+  return input;
 }
 
 function renderCategories() {
@@ -116,44 +113,44 @@ function renderCategories() {
   state.categories.forEach((cat) => {
     const row = document.createElement("div");
     row.className = "item";
-    row.innerHTML = `
-      <div class="grow"><div class="title edit-title">${esc(cat.name)}</div></div>
-      <button class="del-btn" title="Sil">✕</button>`;
 
-    const titleEl = row.querySelector(".edit-title");
+    const titleEl = document.createElement("div");
+    titleEl.className = "title edit-title";
+    titleEl.textContent = cat.name;
+
+    const grow = document.createElement("div");
+    grow.className = "grow";
+    grow.appendChild(titleEl);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "del-btn";
+    delBtn.title = "Sil";
+    delBtn.textContent = "✕";
+
+    row.appendChild(grow);
+    row.appendChild(delBtn);
+
     titleEl.addEventListener("click", () => {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.value = cat.name;
-      input.className = "title-input";
+      const input = makeInlineEditor(cat.name, async (newName) => {
+        if (newName && newName !== cat.name) {
+          const { error } = await db.from("bos_categories").update({ name: newName }).eq("id", cat.id);
+          if (error) { alert("Hata: " + error.message); titleEl.textContent = cat.name; input.replaceWith(titleEl); return; }
+          await db.from("bos_tasks").update({ area: newName }).eq("area", cat.name);
+        }
+        await loadAll();
+      });
       titleEl.replaceWith(input);
       input.focus();
       input.select();
-
-      async function save() {
-        const newName = input.value.trim();
-        if (newName && newName !== cat.name) {
-          await db.from("bos_categories").update({ name: newName }).eq("id", cat.id);
-          await db.from("bos_tasks").update({ area: newName }).eq("area", cat.name);
-          await loadAll();
-        } else {
-          input.replaceWith(titleEl);
-        }
-      }
-
-      input.addEventListener("blur", save);
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); input.blur(); }
-        if (e.key === "Escape") { input.replaceWith(titleEl); }
-      });
     });
 
-    row.querySelector(".del-btn").addEventListener("click", async () => {
+    delBtn.addEventListener("click", async () => {
       if (confirm(`"${cat.name}" kategorisi silinsin mi?`)) {
         await db.from("bos_categories").delete().eq("id", cat.id);
         await loadAll();
       }
     });
+
     box.appendChild(row);
   });
 }
@@ -170,39 +167,9 @@ async function addCategory() {
   await loadAll();
 }
 
-/* ---------------- Bugün ---------------- */
-
-function renderToday() {
-  const t = todayStr();
-  const box = $("today-tasks");
-  const open = state.tasks.filter((x) => !x.done);
-  const doneToday = state.tasks.filter((x) => x.done && x.done_at && localDateOf(x.done_at) === t);
-  box.innerHTML = "";
-  if (open.length === 0) {
-    box.innerHTML = '<p class="empty">Açık görev yok. 👌</p>';
-  } else {
-    open.slice(0, 6).forEach((task) => box.appendChild(taskRow(task, true)));
-  }
-
-  const shown = Math.min(open.length, 6);
-  $("today-task-cnt").textContent = open.length ? `${open.length} açık` : "";
-
-  const total = doneToday.length + open.length;
-  const barWrap = $("today-task-bar-wrap");
-  if (doneToday.length > 0) {
-    barWrap.classList.remove("hidden");
-    $("today-task-bar").style.width = `${Math.round((doneToday.length / total) * 100)}%`;
-  } else {
-    barWrap.classList.add("hidden");
-  }
-
-  $("today-stats").innerHTML = `
-    <div class="stat ac-blue"><div class="n">${doneToday.length}/${total || doneToday.length}</div><div class="l">GÖREV</div></div>`;
-}
-
 /* ---------------- Görevler ---------------- */
 
-function taskRow(task, compact = false) {
+function taskRow(task) {
   const row = document.createElement("div");
   row.className = "item" + (task.done ? " done" : "");
 
@@ -216,53 +183,36 @@ function taskRow(task, compact = false) {
     <div class="grow">
       <div class="title edit-title">${esc(task.title)}</div>
     </div>
-    ${compact ? `<span class="badge">${esc(catName(task.area))}</span>` :
-      `<select class="cat-sel">${catOptions}</select>
-       <button class="del-btn" title="Sil">✕</button>`}`;
+    <select class="cat-sel">${catOptions}</select>
+    <button class="del-btn" title="Sil">✕</button>`;
 
   row.querySelector(".check").addEventListener("click", () => toggleTask(task));
 
-  // Inline title editing
   const titleEl = row.querySelector(".edit-title");
   titleEl.addEventListener("click", () => {
-    const input = document.createElement("input");
-    input.type = "text";
-    input.value = task.title;
-    input.className = "title-input";
+    const input = makeInlineEditor(task.title, async (newTitle) => {
+      if (newTitle && newTitle !== task.title) {
+        await db.from("bos_tasks").update({ title: newTitle }).eq("id", task.id);
+      }
+      await loadAll();
+    });
     titleEl.replaceWith(input);
     input.focus();
     input.select();
-
-    async function save() {
-      const newTitle = input.value.trim();
-      if (newTitle && newTitle !== task.title) {
-        await db.from("bos_tasks").update({ title: newTitle }).eq("id", task.id);
-        await loadAll();
-      } else {
-        input.replaceWith(titleEl);
-      }
-    }
-
-    input.addEventListener("blur", save);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
-      if (e.key === "Escape") { input.replaceWith(titleEl); }
-    });
   });
 
-  if (!compact) {
-    const sel = row.querySelector(".cat-sel");
-    sel.addEventListener("change", async () => {
-      await db.from("bos_tasks").update({ area: sel.value || null }).eq("id", task.id);
+  const sel = row.querySelector(".cat-sel");
+  sel.addEventListener("change", async () => {
+    await db.from("bos_tasks").update({ area: sel.value || null }).eq("id", task.id);
+    await loadAll();
+  });
+
+  row.querySelector(".del-btn").addEventListener("click", async () => {
+    if (confirm("Görev silinsin mi?")) {
+      await db.from("bos_tasks").delete().eq("id", task.id);
       await loadAll();
-    });
-    row.querySelector(".del-btn").addEventListener("click", async () => {
-      if (confirm("Görev silinsin mi?")) {
-        await db.from("bos_tasks").delete().eq("id", task.id);
-        await loadAll();
-      }
-    });
-  }
+    }
+  });
 
   return row;
 }
@@ -270,22 +220,19 @@ function taskRow(task, compact = false) {
 function renderTasks() {
   const open = state.tasks.filter((x) => !x.done);
   const done = state.tasks.filter((x) => x.done).sort((a, b) => (b.done_at ?? "").localeCompare(a.done_at ?? ""));
+
   const ob = $("open-tasks");
   ob.innerHTML = "";
-
   if (open.length === 0) {
     ob.innerHTML = '<p class="empty">Açık görev yok.</p>';
   } else {
-    // Group by category
     const groups = new Map();
     groups.set("Belirsiz", []);
     state.categories.forEach((c) => groups.set(c.name, []));
-
     open.forEach((task) => {
       const key = task.area && groups.has(task.area) ? task.area : "Belirsiz";
       groups.get(key).push(task);
     });
-
     groups.forEach((tasks, name) => {
       if (tasks.length === 0) return;
       const grp = document.createElement("div");
@@ -315,26 +262,10 @@ $("new-task-title").addEventListener("keydown", (e) => { if (e.key === "Enter") 
 async function addTask() {
   const title = $("new-task-title").value.trim();
   if (!title) return;
-  await db.from("bos_tasks").insert({
-    title,
-    area: $("new-task-area").value || null,
-  });
+  await db.from("bos_tasks").insert({ title, area: $("new-task-area").value || null });
   $("new-task-title").value = "";
   await loadAll();
 }
-
-/* ---------------- Sekmeler ---------------- */
-
-document.querySelectorAll("[data-tab]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const tab = btn.dataset.tab;
-    document.querySelectorAll(".tab").forEach((s) => s.classList.add("hidden"));
-    $("tab-" + tab).classList.remove("hidden");
-    document.querySelectorAll("[data-tab]").forEach((b) =>
-      b.classList.toggle("active", b.dataset.tab === tab));
-    window.scrollTo(0, 0);
-  });
-});
 
 /* ---------------- Ayarlar ---------------- */
 
