@@ -284,7 +284,6 @@ function renderTasks() {
     });
     groups.forEach((tasks, name) => {
       if (tasks.length === 0) return;
-      tasks.sort((a, b) => (PRIO_RANK[a.priority] ?? 99) - (PRIO_RANK[b.priority] ?? 99));
       const collapsed = collapsedCats.has(name);
       const grp = document.createElement("div");
       grp.className = "cat-group";
