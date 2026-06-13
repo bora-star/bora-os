@@ -24,38 +24,7 @@ function esc(s) {
   return div.innerHTML;
 }
 
-/* ---------------- Auth ---------------- */
-
-async function init() {
-  const { data: { session } } = await db.auth.getSession();
-  if (session) showApp(); else showLogin();
-}
-
-function showLogin() {
-  $("login-view").classList.remove("hidden");
-  $("app-view").classList.add("hidden");
-}
-
-async function showApp() {
-  $("login-view").classList.add("hidden");
-  $("app-view").classList.remove("hidden");
-  await loadAll();
-}
-
-$("login-btn").addEventListener("click", login);
-$("login-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
-async function login() {
-  const email = $("login-email").value.trim();
-  const password = $("login-pass").value;
-  $("login-error").classList.add("hidden");
-  const { error } = await db.auth.signInWithPassword({ email, password });
-  if (error) {
-    $("login-error").textContent = "Giriş başarısız: e-posta veya şifre hatalı.";
-    $("login-error").classList.remove("hidden");
-    return;
-  }
-  showApp();
-}
+/* ---------------- Başlat ---------------- */
 
 /* ---------------- Veri ---------------- */
 
@@ -339,20 +308,4 @@ async function addTask() {
   await loadAll();
 }
 
-/* ---------------- Ayarlar ---------------- */
-
-$("settings-btn").addEventListener("click", () => $("settings-modal").classList.remove("hidden"));
-$("close-settings-btn").addEventListener("click", () => $("settings-modal").classList.add("hidden"));
-$("logout-btn").addEventListener("click", async () => {
-  await db.auth.signOut();
-  location.reload();
-});
-$("change-pass-btn").addEventListener("click", async () => {
-  const p = $("new-pass").value;
-  if (p.length < 8) { $("settings-msg").textContent = "Şifre en az 8 karakter olmalı."; return; }
-  const { error } = await db.auth.updateUser({ password: p });
-  $("settings-msg").textContent = error ? "Hata: " + error.message : "Şifre değiştirildi ✓";
-  if (!error) $("new-pass").value = "";
-});
-
-init();
+loadAll();
