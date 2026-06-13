@@ -7,6 +7,15 @@ const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const $ = (id) => document.getElementById(id);
 const state = { tasks: [], categories: [] };
+const collapsedCats = new Set();
+
+const PRIO = {
+  acil: { label: "Acil",  icon: "●", color: "var(--red)"   },
+  orta: { label: "Orta",  icon: "●", color: "var(--amber)" },
+  sonra:{ label: "Sonra", icon: "●", color: "var(--muted)" },
+};
+const PRIO_ORDER = [null, "acil", "orta", "sonra"];
+const PRIO_RANK  = { acil: 0, orta: 1, sonra: 2 };
 
 function esc(s) {
   const div = document.createElement("div");
@@ -173,18 +182,28 @@ function taskRow(task) {
   const row = document.createElement("div");
   row.className = "item" + (task.done ? " done" : "");
 
+  const p = task.priority;
+  const prioColor = p ? PRIO[p].color : "var(--border)";
   const catOptions = ['<option value="">Belirsiz</option>',
     ...state.categories.map((c) =>
       `<option value="${esc(c.name)}" ${task.area === c.name ? "selected" : ""}>${esc(c.name)}</option>`)
   ].join("");
 
   row.innerHTML = `
+    <button class="prio-btn" style="color:${prioColor}" title="${p ? PRIO[p].label : "Öncelik yok"}">●</button>
     <button class="check ${task.done ? "on" : ""}">✓</button>
     <div class="grow">
       <div class="title edit-title">${esc(task.title)}</div>
     </div>
     <select class="cat-sel">${catOptions}</select>
     <button class="del-btn" title="Sil">✕</button>`;
+
+  row.querySelector(".prio-btn").addEventListener("click", async () => {
+    const cur = PRIO_ORDER.indexOf(task.priority ?? null);
+    const next = PRIO_ORDER[(cur + 1) % PRIO_ORDER.length];
+    await db.from("bos_tasks").update({ priority: next }).eq("id", task.id);
+    await loadAll();
+  });
 
   row.querySelector(".check").addEventListener("click", () => toggleTask(task));
 
@@ -235,10 +254,24 @@ function renderTasks() {
     });
     groups.forEach((tasks, name) => {
       if (tasks.length === 0) return;
+      tasks.sort((a, b) => (PRIO_RANK[a.priority] ?? 99) - (PRIO_RANK[b.priority] ?? 99));
+      const collapsed = collapsedCats.has(name);
       const grp = document.createElement("div");
       grp.className = "cat-group";
-      grp.innerHTML = `<div class="cat-header">${esc(name)} <span class="muted">${tasks.length}</span></div>`;
-      tasks.forEach((task) => grp.appendChild(taskRow(task)));
+      const header = document.createElement("div");
+      header.className = "cat-header";
+      header.innerHTML = `<span class="chevron">${collapsed ? "▶" : "▼"}</span> ${esc(name)} <span class="muted">${tasks.length}</span>`;
+      header.style.cursor = "pointer";
+      const body = document.createElement("div");
+      body.className = "cat-body" + (collapsed ? " hidden" : "");
+      tasks.forEach((task) => body.appendChild(taskRow(task)));
+      header.addEventListener("click", () => {
+        if (collapsedCats.has(name)) collapsedCats.delete(name);
+        else collapsedCats.add(name);
+        renderTasks();
+      });
+      grp.appendChild(header);
+      grp.appendChild(body);
       ob.appendChild(grp);
     });
   }
@@ -262,7 +295,7 @@ $("new-task-title").addEventListener("keydown", (e) => { if (e.key === "Enter") 
 async function addTask() {
   const title = $("new-task-title").value.trim();
   if (!title) return;
-  await db.from("bos_tasks").insert({ title, area: $("new-task-area").value || null });
+  await db.from("bos_tasks").insert({ title, area: $("new-task-area").value || null, priority: $("new-task-prio").value || null });
   $("new-task-title").value = "";
   await loadAll();
 }

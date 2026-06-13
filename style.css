@@ -277,6 +277,14 @@ h1 { font-size: 24px; margin-bottom: 16px; }
   padding: 4px 8px;
 }
 
+.prio-btn {
+  background: transparent;
+  font-size: 13px;
+  padding: 2px 4px;
+  min-width: 20px;
+  line-height: 1;
+}
+.cat-body { }
 .edit-title { cursor: pointer; }
 .title-input {
   width: 100%;
