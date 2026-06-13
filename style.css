@@ -238,6 +238,22 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 .item .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
 .item.done .title { text-decoration: line-through; color: var(--muted); }
 
+.task-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.task-meta .cat-sel {
+  flex: 1;
+  font-size: 13px;
+  padding: 5px 8px;
+  border-radius: 8px;
+}
+.task-meta .del-btn {
+  flex-shrink: 0;
+}
+
 .check {
   width: 40px !important; height: 40px !important;
   min-width: 40px !important;

@@ -164,9 +164,11 @@ function taskRow(task) {
     <button class="check ${task.done ? "on" : ""}">✓</button>
     <div class="grow">
       <div class="title edit-title">${esc(task.title)}</div>
-    </div>
-    <select class="cat-sel">${catOptions}</select>
-    <button class="del-btn" title="Sil">✕</button>`;
+      <div class="task-meta">
+        <select class="cat-sel">${catOptions}</select>
+        <button class="del-btn" title="Sil">✕</button>
+      </div>
+    </div>`;
 
   row.querySelector(".prio-btn").addEventListener("click", async (e) => {
     e.stopPropagation();
