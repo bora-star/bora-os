@@ -239,14 +239,21 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 .item.done .title { text-decoration: line-through; color: var(--muted); }
 
 .check {
-  width: 40px; height: 40px;
-  min-width: 40px;
-  border-radius: 12px;
-  border: 2px solid #333b47;
-  background: transparent;
-  color: transparent;
-  font-size: 20px;
+  width: 40px !important; height: 40px !important;
+  min-width: 40px !important;
+  border-radius: 12px !important;
+  border: 2px solid #333b47 !important;
+  background: transparent !important;
+  color: transparent !important;
+  font-size: 20px !important;
   line-height: 1;
+  flex-shrink: 0;
+}
+.check.on {
+  background: var(--c, var(--green)) !important;
+  border-color: var(--c, var(--green)) !important;
+  color: #0b0d10 !important;
+  font-weight: bold;
 }
 .check.on {
   background: var(--c, var(--green));
@@ -278,11 +285,14 @@ h1 { font-size: 24px; margin-bottom: 16px; }
 }
 
 .prio-btn {
-  background: transparent;
-  font-size: 32px;
-  padding: 0 8px;
-  min-width: 36px;
-  line-height: 1;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  border-radius: 50% !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  flex-shrink: 0;
 }
 .cat-body { }
 .sort-btn {

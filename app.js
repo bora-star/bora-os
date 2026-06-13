@@ -11,9 +11,9 @@ const collapsedCats = new Set();
 let sortMode = "category"; // "category" | "priority"
 
 const PRIO = {
-  acil: { label: "Acil",  icon: "●", color: "var(--red)"   },
-  orta: { label: "Orta",  icon: "●", color: "var(--amber)" },
-  sonra:{ label: "Sonra", icon: "●", color: "var(--muted)" },
+  acil: { label: "Acil",  bg: "#ff5d5d" },
+  orta: { label: "Orta",  bg: "#ffb224" },
+  sonra:{ label: "Sonra", bg: "#8a93a3" },
 };
 const PRIO_ORDER = [null, "acil", "orta", "sonra"];
 const PRIO_RANK  = { acil: 0, orta: 1, sonra: 2 };
@@ -184,14 +184,14 @@ function taskRow(task) {
   row.className = "item" + (task.done ? " done" : "");
 
   const p = task.priority;
-  const prioColor = p ? PRIO[p].color : "var(--border)";
+  const prioBg = p ? PRIO[p].bg : "#232830";
   const catOptions = ['<option value="">Belirsiz</option>',
     ...state.categories.map((c) =>
       `<option value="${esc(c.name)}" ${task.area === c.name ? "selected" : ""}>${esc(c.name)}</option>`)
   ].join("");
 
   row.innerHTML = `
-    <button class="prio-btn" style="color:${prioColor}" title="${p ? PRIO[p].label : "Öncelik yok"}">●</button>
+    <button class="prio-btn" style="background:${prioBg}" title="${p ? PRIO[p].label : "Öncelik yok"}"></button>
     <button class="check ${task.done ? "on" : ""}">✓</button>
     <div class="grow">
       <div class="title edit-title">${esc(task.title)}</div>
